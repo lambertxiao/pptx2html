@@ -1,0 +1,19 @@
+{
+  "name": "pptxtohtml",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^16.11.6",
+    "colz": "^0.1.0",
+    "jszip": "^3.7.1"
+  }
+}
