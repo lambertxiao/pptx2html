@@ -75,15 +75,15 @@ export default class ShapeNode extends NodeResolver {
     if (extractTextByPath(slideXfrmNode, ["attrs", "flipV"]) === "1" || extractTextByPath(slideXfrmNode, ["attrs", "flipH"]) === "1") {
       isFlipV = true;
     }
-
+    
     if (shapType !== undefined) {
-      let off = extractTextByPath(slideXfrmNode, ["a:off", "attrs"]);
-      let x = computePixel(off["x"])
-      let y = computePixel(off["y"])
+      // let off = extractTextByPath(slideXfrmNode, ["a:off", "attrs"]);
+      // let x = computePixel(off["x"])
+      // let y = computePixel(off["y"])
 
       let ext = extractTextByPath(slideXfrmNode, ["a:ext", "attrs"]);
-      let w = computePixel(off["cx"])
-      let h = computePixel(off["cy"])
+      let w = computePixel(ext["cx"])
+      let h = computePixel(ext["cy"])
 
       result += "<svg class='drawing' _id='" + this.id + "' _idx='" + this.idx + "' _type='" + this.type + "' _name='" + this.name +
         "' style='" +
@@ -97,8 +97,6 @@ export default class ShapeNode extends NodeResolver {
 
       // Border Color        
       let border = this.getBorder(true);
-      console.log(border);
-
       let headEndNodeAttrs = extractTextByPath(this.node, ["p:spPr", "a:ln", "a:headEnd", "attrs"]);
       let tailEndNodeAttrs = extractTextByPath(this.node, ["p:spPr", "a:ln", "a:tailEnd", "attrs"]);
       // type: none, triangle, stealth, diamond, oval, arrow
@@ -263,8 +261,9 @@ export default class ShapeNode extends NodeResolver {
         case "wedgeRectCallout":
         case "wedgeRoundRectCallout":
         case "rect":
-          result += "<rect x='0' y='0' width='" + w + "' height='" + h + "' fill='" + fillColor +
-            "' stroke='" + border.color + "' stroke-width='" + border.width + "' stroke-dasharray='" + border.strokeDasharray + "' />";
+          result += 
+          `<rect x=0 y=0 width=${w} height=${h} fill=${fillColor}
+            stroke=${border.color} stroke-width=${border.width} stroke-dasharray=${border.strokeDasharray} />`
           break;
         case "ellipse":
           result += "<ellipse cx='" + (w / 2) + "' cy='" + (h / 2) + "' rx='" + (w / 2) + "' ry='" + (h / 2) + "' fill='" + fillColor +
@@ -568,6 +567,9 @@ export default class ShapeNode extends NodeResolver {
         break;
       case undefined:
       default:
+        cssText += "solid";
+        strokeDasharray = "0";
+        break;
     }
 
     if (isSvgMode) {

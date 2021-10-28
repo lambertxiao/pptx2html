@@ -16,6 +16,7 @@ export class SingleSlide {
   masterTextStyles?: string
   // 母版的索引表
   masterIndexTable?: { idTable: any, idxTable: any, typeTable: any }
+  masterResContent?: any
   bgColor?: string
   gprops?: GlobalProps
 }

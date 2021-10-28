@@ -3,7 +3,7 @@ import ShapeNode from './node_resolver/node_shapetext';
 import PPTXProvider from './pptx_provider';
 import { GlobalProps } from './props';
 import { SingleSlide } from './slide';
-import { computePixel, extractTextByPath } from './util';
+import { computePixel, extractTextByPath, img2Base64 } from './util';
 import GraphicNode from './node_resolver/node_graphic'
 
 export default class SlideProcessor {
@@ -11,6 +11,7 @@ export default class SlideProcessor {
   slideNodes?: any
   gprops: GlobalProps
   slide?: SingleSlide
+  masterBg: any
 
   constructor(
     private readonly provider: PPTXProvider,
@@ -31,6 +32,7 @@ export default class SlideProcessor {
     this.slide = slide
     this.slide.gprops = this.gprops
     slide.content = await this.provider.loadXML(this.slidePath)
+
     let { layoutFilePath, slideResContent } = await this.getSlideRes(this.slidePath)
     slide.resContent = slideResContent
 
@@ -38,19 +40,40 @@ export default class SlideProcessor {
     slide.layoutIndexTables = await this.indexNodes(slide.layoutContent)
     slide.layoutResContent = await this.getSlideLayoutRes(layoutFilePath)
 
-    slide.masterContent = await this.provider.loadXML(this.getSlideMasterFilePath(slide.layoutResContent))
+    let masterFilePath = this.getSlideMasterFilePath(slide.layoutResContent)
+    slide.masterContent = await this.provider.loadXML(masterFilePath)
     slide.masterIndexTable = this.indexNodes(slide.masterContent)
     slide.masterTextStyles = extractTextByPath(slide.masterContent, ["p:sldMaster", "p:txStyles"]);
 
+    slide.masterResContent = await this.getMasterRes(masterFilePath)
+    let masterBgPath = this.loadMasterBg()
+
+    if (masterBgPath) {
+      this.masterBg = img2Base64(await this.provider.loadArrayBuffer(masterBgPath))
+    }
+
     this.slideNodes = this.slide?.content["p:sld"]["p:cSld"]["p:spTree"]
     slide.bgColor = this.getSlideBackgroundColor()
+  }
+  
+  loadMasterBg() {
+    let resId = extractTextByPath(this.slide!.masterContent, ["p:sldMaster", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    let relationships = this.slide!.masterResContent["Relationships"]["Relationship"]
+
+    for (const relationship of relationships) {
+      if (relationship["attrs"]["Id"] == resId) {
+        return relationship["attrs"]["Target"].replace("../", "ppt/");
+      }
+    }
+
+    return ""
   }
 
   async genHtml() {
     let { slideWidth, slideHeight } = this.gprops
     let { bgColor } = this.slide!
     let result = `
-<section style="width: ${slideWidth}px; height: ${slideHeight}px; background-color: #${bgColor}">
+<section style="width: ${slideWidth}px; height: ${slideHeight}px; background-color: #${bgColor}; background-image: url(data:image/png;base64,${this.masterBg})">
 `
 
     let nodes = this.slideNodes
@@ -112,6 +135,13 @@ export default class SlideProcessor {
     let layoutResContent = await this.provider.loadXML(layoutResFilePath)
 
     return layoutResContent
+  }
+
+  async getMasterRes(masterPath: string) {
+    let masterResFilePath = masterPath.replace("slideMasters", "slideMasters/_rels") + ".rels";
+    let mastertResContent = await this.provider.loadXML(masterResFilePath)
+
+    return mastertResContent
   }
 
   // 从slideLayoutRes中提取出母版地址
@@ -269,7 +299,8 @@ export default class SlideProcessor {
 
   async processShapeAndTextNode(nodeVal: any) {
     let sp = new ShapeNode(this.provider, this.slide!, nodeVal, this.globalCssStyles, false)
-    return await sp.genHTML()
+    let html = await sp.genHTML()
+    return html
   }
 
   async processCxnSpNode(nodeVal: any) {

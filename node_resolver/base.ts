@@ -185,7 +185,6 @@ export default abstract class NodeResolver {
   }
 
 	genSpanElement(node: any, type?: string) {
-    let slideMasterTextStyles = this.slide.masterTextStyles
     let text = node["a:t"];
     if (typeof text !== 'string') {
       text = extractTextByPath(node, ["a:fld", "a:t"]);

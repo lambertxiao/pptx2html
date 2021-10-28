@@ -123,35 +123,40 @@ export default class XMLTransform {
   }
 
   simplefy(children: any[]) {
-    var node: any = {};
+    let node: any = {};
 
     if (children === undefined) {
       return {};
     }
 
     // Text node (e.g. <t>This is text.</t>)
-    // if (children.length === 1 && typeof children[0] == 'string') {
-    //     return children[0];
-    // }
+    if (children.length === 1 && typeof children[0] == 'string') {
+      return children[0];
+    }
 
     // map each object
-    let that = this
     children.forEach((child: any) => {
       if (!node[child.tagName]) {
         node[child.tagName] = [];
       }
 
       if (typeof child === 'object') {
-        var kids = this.simplefy(child.children);
-        if (child.attrs) {
-          kids.attrs = child.attrs;
+        let kids = this.simplefy(child.children);
+
+        if (typeof kids == "string") {
+
+        } else {
+          if (child.attrs) {
+            kids["attrs"] = child.attrs;
+          }
+  
+          if (kids["attrs"] === undefined) {
+            kids["attrs"] = { "order": this._order };
+          } else {
+            kids["attrs"]["order"] = this._order;
+          }
         }
 
-        if (kids["attrs"] === undefined) {
-          kids["attrs"] = { "order": this._order };
-        } else {
-          kids["attrs"]["order"] = this._order;
-        }
         this._order++;
         node[child.tagName].push(kids);
       }
@@ -164,5 +169,5 @@ export default class XMLTransform {
     }
 
     return node;
-  };
+  }
 }

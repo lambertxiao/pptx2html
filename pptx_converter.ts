@@ -30,7 +30,7 @@ export default class PPTXConverter {
   }
 
   async loadThumbImg() {
-   return img2Base64(await this.provider.loadBlob("docProps/thumbnail.jpeg"))
+    return img2Base64(await this.provider.loadArrayBuffer("docProps/thumbnail.jpeg"))
   }
 
   // 读取[Content_Types].xml，解析出slides和slideLayouts
@@ -54,7 +54,7 @@ export default class PPTXConverter {
     }
 
     return [slidesLocArray, slideLayoutsLocArray]
-    
+
   }
 
   // 获取幻灯片宽高
@@ -91,10 +91,32 @@ export default class PPTXConverter {
   }
 
   async processSlides() {
+    let html = ""
+    let i = 0
     for (const slide of this.gprops?.slidePaths!) {
       let processor = new SlideProcessor(this.provider!, slide, this.gprops!, this.globalCssStyles)
-      let html = await processor.process()
-      fs.appendFileSync("./a.html", html)
+      html += await processor.process()
+      i++
+
+      // if (i == 2) {
+      //   break
+      // }
     }
+
+    let template = fs.readFileSync("./web/pptx.html").toString()
+    let cssContent = fs.readFileSync("./web/pptx.css").toString()
+    let globalCss = this.genGlobalCSS()
+    let content = template.replace("{{content}}", html)
+    content = content.replace("{{style}}", cssContent + " " + globalCss)
+
+    fs.writeFileSync("./a.html", content)
+  }
+
+  genGlobalCSS() {
+    var cssText = "";
+    for (var key in this.globalCssStyles) {
+      cssText += "section ." + this.globalCssStyles[key]["name"] + "{" + this.globalCssStyles[key]["text"] + "}\n";
+    }
+    return cssText;
   }
 }
