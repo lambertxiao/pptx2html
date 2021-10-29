@@ -94,14 +94,10 @@ export default class PPTXConverter {
     let html = ""
     let i = 0
     for (const slide of this.gprops?.slidePaths!) {
-      // if (i == 21) {
-        let processor = new SlideProcessor(this.provider!, slide, this.gprops!, this.globalCssStyles)
-        html += await processor.process()
-      // }
+      let processor = new SlideProcessor(this.provider!, slide, this.gprops!, this.globalCssStyles)
+      let content = await processor.process()
+      html += `<div class="item ${i} ${i == 0 ? "active" :""}" >${content}</div>`
       i++
-      // if (i == 2) {
-      //   break
-      // }
     }
 
     let template = fs.readFileSync("./web/pptx.html").toString()
@@ -109,6 +105,7 @@ export default class PPTXConverter {
     let globalCss = this.genGlobalCSS()
     let content = template.replace("{{content}}", html)
     content = content.replace("{{style}}", cssContent + " " + globalCss)
+    content = content.replace("{{width}}", this.gprops!.slideWidth + "")
 
     fs.writeFileSync("./a.html", content)
   }

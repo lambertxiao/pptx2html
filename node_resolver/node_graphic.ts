@@ -73,6 +73,7 @@ export default class GraphicNode extends NodeResolver {
       tableHtml += "</tr>";
     }
 
+    tableHtml += "</table>"
     return tableHtml;
   }
 

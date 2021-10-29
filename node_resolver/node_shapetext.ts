@@ -386,7 +386,6 @@ export default class ShapeNode extends NodeResolver {
         result += this.genTextBody(node["p:txBody"], this.type);
       }
       result += "</div>";
-
     }
 
     return result;
@@ -478,7 +477,7 @@ export default class ShapeNode extends NodeResolver {
     let lineNode = node["p:spPr"]["a:ln"];
 
     // Border width: 1pt = 12700, default = 0.75pt
-    let borderWidth = parseInt(extractTextByPath(lineNode, ["attrs", "w"])) / 12700;
+    let borderWidth = parseInt(extractTextByPath(lineNode, ["attrs", "w"])) / 12700 / 5;
     if (isNaN(borderWidth) || borderWidth < 1) {
       cssText += "1pt ";
     } else {
@@ -508,7 +507,6 @@ export default class ShapeNode extends NodeResolver {
           borderColor = color.hex.replace("#", "");
         }
       }
-
     }
 
     if (borderColor === undefined) {
@@ -583,10 +581,10 @@ export default class ShapeNode extends NodeResolver {
 
   getSchemeColorFromTheme(schemeClr: string) {
     switch (schemeClr) {
-      case "a:tx1": schemeClr = "a:dk1"; break;
-      case "a:tx2": schemeClr = "a:dk2"; break;
-      case "a:bg1": schemeClr = "a:lt1"; break;
-      case "a:bg2": schemeClr = "a:lt2"; break;
+      case "tx1": schemeClr = "a:dk1"; break;
+      case "tx2": schemeClr = "a:dk2"; break;
+      case "bg1": schemeClr = "a:lt1"; break;
+      case "bg2": schemeClr = "a:lt2"; break;
     }
     let refNode = extractTextByPath(this.slide!.gprops!.theme, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
     let color = extractTextByPath(refNode, ["a:srgbClr", "attrs", "val"]);
