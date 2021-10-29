@@ -61,3 +61,19 @@ export function computePixel(emus: string): number {
 export function extractFileExtension(filename: string) {
 	return filename.substr((~-filename.lastIndexOf(".") >>> 0) + 2);
 }
+
+export function getSchemeColorFromTheme(theme: any, schemeClr: string) {
+	switch (schemeClr) {
+		case "tx1": schemeClr = "a:dk1"; break;
+		case "tx2": schemeClr = "a:dk2"; break;
+		case "bg1": schemeClr = "a:lt1"; break;
+		case "bg2": schemeClr = "a:lt2"; break;
+	}
+	let refNode = extractTextByPath(theme, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
+	let color = extractTextByPath(refNode, ["a:srgbClr", "attrs", "val"]);
+	if (color === undefined) {
+		color = extractTextByPath(refNode, ["a:sysClr", "attrs", "lastClr"]);
+	}
+
+	return color;
+}

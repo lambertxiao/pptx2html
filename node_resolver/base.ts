@@ -1,4 +1,4 @@
-import PPTXProvider from '../pptx_provider';
+import PPTXProvider from '../provider';
 import { SingleSlide } from '../slide';
 import { computePixel, extractTextByPath } from '../util';
 
@@ -58,9 +58,21 @@ export default abstract class NodeResolver {
     if (ext === undefined) {
       return "";
     } else {
+      
       w = computePixel(ext["cx"])
       h = computePixel(ext["cy"])
-      return (isNaN(w) || isNaN(h)) ? "" : "width:" + w + "px; height:" + h + "px;";
+
+      if (isNaN(w) || isNaN(h)) {
+        return ""
+      } else {
+        if (h == 0) {
+          return "width:" + w + "px;";
+        } else {
+          return "width:" + w + "px; height:" + h + "px;";
+        }
+      }
+
+      // return (isNaN(w) || isNaN(h)) ? "" : "width:" + w + "px; height:" + h + "px;";
     }
   }
 

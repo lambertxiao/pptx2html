@@ -1,5 +1,5 @@
 import SlideProcessor from './slide_processor'
-import PPTXProvider from './pptx_provider'
+import PPTXProvider from './provider'
 import { computePixel, img2Base64 } from './util'
 import { GlobalProps } from './props'
 import fs from 'fs'
@@ -94,10 +94,11 @@ export default class PPTXConverter {
     let html = ""
     let i = 0
     for (const slide of this.gprops?.slidePaths!) {
-      let processor = new SlideProcessor(this.provider!, slide, this.gprops!, this.globalCssStyles)
-      html += await processor.process()
+      // if (i == 21) {
+        let processor = new SlideProcessor(this.provider!, slide, this.gprops!, this.globalCssStyles)
+        html += await processor.process()
+      // }
       i++
-
       // if (i == 2) {
       //   break
       // }

@@ -1,8 +1,8 @@
-import PPTXConverter from "./pptx_converter";
-import PPTXProvider from "./pptx_provider";
+import PPTXConverter from "./converter";
+import PPTXProvider from "./provider";
 
 async function main() {
-  let filepath = "/Users/star/workspace/ppt2html/temp/kj.pptx"
+  let filepath = "/Users/lambert.xiao/workspace/mpptx2html/temp/demo.pptx"
 
   let provider = new PPTXProvider(filepath)
   await provider.provide()

@@ -1,4 +1,4 @@
-import PPTXProvider from '../pptx_provider';
+import PPTXProvider from '../provider';
 import { SingleSlide } from '../slide';
 import { computePixel, extractTextByPath } from '../util';
 import NodeResolver from './base';
@@ -448,6 +448,13 @@ export default class ShapeNode extends NodeResolver {
     }
   }
 
+  applyLumModify(rgbStr: string, factor: number, offset: number) {
+    var color = new colz.Color(rgbStr);
+    //color.setLum(color.hsl.l * factor);
+    color.setLum(color.hsl.l * (1 + offset));
+    return color.rgb.toString();
+}
+
   getVerticalAlign() {
     // 上中下對齊: X, <a:bodyPr anchor="ctr">, <a:bodyPr anchor="b">
     let anchor = extractTextByPath(this.node, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
@@ -461,12 +468,7 @@ export default class ShapeNode extends NodeResolver {
     return anchor === "ctr" ? "v-mid" : anchor === "b" ? "v-down" : "v-up";
   }
 
-  applyLumModify(rgbStr: any, factor: any, offset: any) {
-    let color = new colz.Color(rgbStr);
-    //color.setLum(color.hsl.l * factor);
-    color.setLum(color.hsl.l * (1 + offset));
-    return color.rgb.toString();
-  }
+  
 
   getBorder(isSvgMode: boolean): any {
     let node = this.node
@@ -488,7 +490,7 @@ export default class ShapeNode extends NodeResolver {
     if (borderColor === undefined) {
       let schemeClrNode = extractTextByPath(lineNode, ["a:solidFill", "a:schemeClr"]);
       let schemeClr = "a:" + extractTextByPath(schemeClrNode, ["attrs", "val"]);
-      let borderColor = this.getSchemeColorFromTheme(schemeClr);
+      borderColor = this.getSchemeColorFromTheme(schemeClr);
     }
 
     // 2. drawingML namespace
@@ -580,8 +582,6 @@ export default class ShapeNode extends NodeResolver {
   }
 
   getSchemeColorFromTheme(schemeClr: string) {
-    // TODO: <p:clrMap ...> in slide master
-    // e.g. tx2="dk2" bg2="lt2" tx1="dk1" bg1="lt1"
     switch (schemeClr) {
       case "a:tx1": schemeClr = "a:dk1"; break;
       case "a:tx2": schemeClr = "a:dk2"; break;

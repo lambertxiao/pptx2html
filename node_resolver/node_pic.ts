@@ -12,6 +12,7 @@ export default class PicNode extends NodeResolver {
     let imgArrayBuffer = await this.provider.loadArrayBuffer(imgName)
     let mimeType = "";
     let xfrmNode = node["p:spPr"]["a:xfrm"];
+    let prst = node["p:spPr"]["a:prstGeom"]["attrs"]["prst"]
 
     switch (imgFileExt) {
       case "jpg":
@@ -33,8 +34,24 @@ export default class PicNode extends NodeResolver {
       default:
         mimeType = "image/*";
     }
-    return "<div class='block content' style='" + this.getPosition(xfrmNode, undefined, undefined) + this.getSize(xfrmNode, undefined, undefined) +
-      " z-index: " + order + ";" +
-      "'><img src=\"data:" + mimeType + ";base64," + img2Base64(imgArrayBuffer) + "\" style='width: 100%; height: 100%'/></div>";
+
+    let imgBorderRadius
+    // 圆角矩形xml里没有给出具体的边弧度
+    if (prst == "roundRect") {
+      imgBorderRadius = "border-radius: 40px;"
+    }
+
+    let position = this.getPosition(xfrmNode, undefined, undefined)
+    let size = this.getSize(xfrmNode, undefined, undefined)
+
+    return `
+      <div class="block content" z-index: ${order}; style="${position} ${size}">
+        <img src="data:${mimeType};base64,${img2Base64(imgArrayBuffer)}" style="width: 100%; height: 100%; ${imgBorderRadius}"/>
+      </div>
+    `
+
+    // return "<div class='block content' style='" + this.getPosition(xfrmNode, undefined, undefined) + this.getSize(xfrmNode, undefined, undefined) +
+      // " z-index: " + order + ";" +
+      // "'><img src=\"data:" + mimeType + ";base64," + img2Base64(imgArrayBuffer) + "\" style='width: 100%; height: 100%'/></div>";
   }
 }

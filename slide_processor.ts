@@ -1,9 +1,9 @@
 import PicNode from './node_resolver/node_pic';
 import ShapeNode from './node_resolver/node_shapetext';
-import PPTXProvider from './pptx_provider';
+import PPTXProvider from './provider';
 import { GlobalProps } from './props';
 import { SingleSlide } from './slide';
-import { computePixel, extractTextByPath, img2Base64 } from './util';
+import { computePixel, extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
 import GraphicNode from './node_resolver/node_graphic'
 
 export default class SlideProcessor {
@@ -11,6 +11,7 @@ export default class SlideProcessor {
   slideNodes?: any
   gprops: GlobalProps
   slide?: SingleSlide
+  layoutBg: any
   masterBg: any
 
   constructor(
@@ -44,9 +45,14 @@ export default class SlideProcessor {
     slide.masterContent = await this.provider.loadXML(masterFilePath)
     slide.masterIndexTable = this.indexNodes(slide.masterContent)
     slide.masterTextStyles = extractTextByPath(slide.masterContent, ["p:sldMaster", "p:txStyles"]);
-
     slide.masterResContent = await this.getMasterRes(masterFilePath)
+    
+    let layoutBgPath = this.loadLayoutBg()
     let masterBgPath = this.loadMasterBg()
+
+    if (layoutBgPath) {
+      this.layoutBg = img2Base64(await this.provider.loadArrayBuffer(layoutBgPath))
+    }
 
     if (masterBgPath) {
       this.masterBg = img2Base64(await this.provider.loadArrayBuffer(masterBgPath))
@@ -54,6 +60,19 @@ export default class SlideProcessor {
 
     this.slideNodes = this.slide?.content["p:sld"]["p:cSld"]["p:spTree"]
     slide.bgColor = this.getSlideBackgroundColor()
+  }
+
+  loadLayoutBg() {
+    let resId = extractTextByPath(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    let relationships = this.slide!.layoutResContent["Relationships"]["Relationship"]
+
+    for (const relationship of relationships) {
+      if (relationship["attrs"]["Id"] == resId) {
+        return relationship["attrs"]["Target"].replace("../", "ppt/");
+      }
+    }
+
+    return ""
   }
   
   loadMasterBg() {
@@ -72,10 +91,17 @@ export default class SlideProcessor {
   async genHtml() {
     let { slideWidth, slideHeight } = this.gprops
     let { bgColor } = this.slide!
-    let result = `
-<section style="width: ${slideWidth}px; height: ${slideHeight}px; background-color: #${bgColor}; background-image: url(data:image/png;base64,${this.masterBg})">
-`
+    let bg = ""
+    
+    if (this.layoutBg) {
+      bg = `background-image: url(data:image/png;base64,${this.layoutBg})`
+    } else if (this.masterBg) {
+      bg = `background-image: url(data:image/png;base64,${this.masterBg})`
+    }
 
+    let result = `
+<section style="width: ${slideWidth}px; height: ${slideHeight}px; background-color: #${bgColor}; ${bg}; background-size: cover;">
+`
     let nodes = this.slideNodes
 
     for (let nodeKey in nodes) {
@@ -192,25 +218,7 @@ export default class SlideProcessor {
       color = extractTextByPath(solidFill["a:srgbClr"], ["attrs", "val"]);
     } else if (solidFill["a:schemeClr"] !== undefined) {
       let schemeClr = "a:" + extractTextByPath(solidFill["a:schemeClr"], ["attrs", "val"]);
-      color = this.getSchemeColorFromTheme(schemeClr);
-    }
-
-    return color;
-  }
-
-  getSchemeColorFromTheme(schemeClr: string) {
-    // TODO: <p:clrMap ...> in slide master
-    // e.g. tx2="dk2" bg2="lt2" tx1="dk1" bg1="lt1"
-    switch (schemeClr) {
-      case "a:tx1": schemeClr = "a:dk1"; break;
-      case "a:tx2": schemeClr = "a:dk2"; break;
-      case "a:bg1": schemeClr = "a:lt1"; break;
-      case "a:bg2": schemeClr = "a:lt2"; break;
-    }
-    let refNode = extractTextByPath(this.gprops.theme, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
-    let color = extractTextByPath(refNode, ["a:srgbClr", "attrs", "val"]);
-    if (color === undefined) {
-      color = extractTextByPath(refNode, ["a:sysClr", "attrs", "lastClr"]);
+      color = getSchemeColorFromTheme(this.slide!.gprops!.theme, schemeClr);
     }
 
     return color;
