@@ -1,5 +1,5 @@
 import PPTXProvider from '../provider';
-import { SingleSlide } from '../slide';
+import { SingleSlide } from '../model';
 import { computePixel, extractTextByPath } from '../util';
 import NodeResolver from './base';
 const colz = require('colz');

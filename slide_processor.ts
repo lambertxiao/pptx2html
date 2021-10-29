@@ -1,10 +1,9 @@
-import PicNode from './node_resolver/node_pic';
-import ShapeNode from './node_resolver/node_shapetext';
+import PicNode from './resolver/node_pic';
+import ShapeNode from './resolver/node_shapetext';
 import PPTXProvider from './provider';
-import { GlobalProps } from './props';
-import { SingleSlide } from './slide';
-import { computePixel, extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
-import GraphicNode from './node_resolver/node_graphic'
+import { GlobalProps, SingleSlide } from './model';
+import { extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
+import GraphicNode from './resolver/node_graphic'
 
 export default class SlideProcessor {
   // slide的内容节点

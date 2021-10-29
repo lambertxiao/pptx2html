@@ -1,30 +1,37 @@
 import SlideProcessor from './slide_processor'
 import PPTXProvider from './provider'
 import { computePixel, img2Base64 } from './util'
-import { GlobalProps } from './props'
+import { GlobalProps } from './model'
 import fs from 'fs'
+import path from 'node:path'
 
 export default class PPTXConverter {
-  gprops?: GlobalProps
+  srcFilePath: string
+  outDir: string
+  gprops: GlobalProps
   globalCssStyles: any
+  provider: PPTXProvider
 
-  constructor(private readonly provider: PPTXProvider) {
+  constructor(srcFilePath: string, outDir: string) {
+    this.srcFilePath = srcFilePath
+    this.outDir = outDir
     this.globalCssStyles = {}
+    this.gprops = new GlobalProps()
+    this.provider = new PPTXProvider(this.srcFilePath)
   }
 
-  async loadPPTX() {
-    let gprops = new GlobalProps()
+  async run() {
+    await this.provider.init()
     let [slideWidth, slideHeight] = await this.loadSlideSize()
-    gprops.slideWidth = slideWidth
-    gprops.slideHeight = slideHeight
-    gprops.thumbnail = await this.loadThumbImg()
-
     let [slidePaths, slideLayouts] = await this.loadSlidesAndLayouts()
-    gprops.slidePaths = slidePaths
-    gprops.slideLayouts = slideLayouts
 
-    gprops.theme = await this.loadTheme()
-    this.gprops = gprops
+    this.gprops.slideWidth = slideWidth
+    this.gprops.slideHeight = slideHeight
+    this.gprops.thumbnail = await this.loadThumbImg()
+
+    this.gprops.slidePaths = slidePaths
+    this.gprops.slideLayouts = slideLayouts
+    this.gprops.theme = await this.loadTheme()
 
     await this.processSlides()
   }
@@ -54,7 +61,6 @@ export default class PPTXConverter {
     }
 
     return [slidesLocArray, slideLayoutsLocArray]
-
   }
 
   // 获取幻灯片宽高
@@ -93,25 +99,31 @@ export default class PPTXConverter {
   async processSlides() {
     let html = ""
     let i = 0
+    
     for (const slide of this.gprops?.slidePaths!) {
       let processor = new SlideProcessor(this.provider!, slide, this.gprops!, this.globalCssStyles)
       let content = await processor.process()
-      html += `<div class="item ${i} ${i == 0 ? "active" :""}" >${content}</div>`
+      html += `<div class="item ${i} ${i == 0 ? "active" : ""}" >${content}</div>`
       i++
     }
 
     let template = fs.readFileSync("./web/pptx.html").toString()
     let cssContent = fs.readFileSync("./web/pptx.css").toString()
+
     let globalCss = this.genGlobalCSS()
     let content = template.replace("{{content}}", html)
     content = content.replace("{{style}}", cssContent + " " + globalCss)
     content = content.replace("{{width}}", this.gprops!.slideWidth + "")
-
-    fs.writeFileSync("./a.html", content)
+    
+    fs.writeFileSync(this.getOutputName(), content)
   }
 
+  getOutputName(): string {
+    return this.outDir + "/" +path.basename(this.srcFilePath).split(".")[0] + ".html"
+}
+
   genGlobalCSS() {
-    var cssText = "";
+    let cssText = "";
     for (var key in this.globalCssStyles) {
       cssText += "section ." + this.globalCssStyles[key]["name"] + "{" + this.globalCssStyles[key]["text"] + "}\n";
     }

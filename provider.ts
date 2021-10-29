@@ -7,7 +7,7 @@ export default class PPTXProvider {
 
   constructor(private readonly pptxPath: string) {}
 
-  async provide() {
+  async init() {
     let data = fs.readFileSync(this.pptxPath)
     let zip = new JSZip()
     this.pptxData = await zip.loadAsync(data)
