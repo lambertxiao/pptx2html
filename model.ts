@@ -5,6 +5,12 @@ export class GlobalProps {
   slideLayouts?: any[]
   thumbnail?: string
   theme?: any
+
+  globalStyles: {[key: string]: CssStyle} = {}
+
+  addStyle(name: string, val: CssStyle) {
+    this.globalStyles[name] = val
+  }
 }
 
 export class SingleSlide {
@@ -26,4 +32,38 @@ export class SingleSlide {
   masterResContent?: any
   bgColor?: string
   gprops?: GlobalProps
+}
+
+export class CssStyle {
+
+  content: {[key: string]: string} = {}
+
+  constructor(private readonly name: string) {
+    this.name = name
+  }
+
+  add(key: string, val: string) {
+    this.content[key] = val
+  }
+
+  addWidth(val: number) {
+    this.add("width", val + "px")
+  }
+
+  addHeight(val: number) {
+    this.add("height", val + "px")
+  }
+
+  addBGBase64Img(val: string) {
+    this.add("background-image", `url(data:image/png;base64,${val})`)
+  }
+
+  toString() {
+    let s = ""
+    for (const key in this.content) {
+      s += `${key}: ${this.content[key]};`
+    }
+
+    return `.${this.name} {${s}}`
+  }
 }

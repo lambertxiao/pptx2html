@@ -1,10 +1,10 @@
 import PPTXProvider from '../provider';
 import { SingleSlide } from '../model';
 import { computePixel, extractTextByPath } from '../util';
-import NodeResolver from './base';
+import NodeProcessor from './processor';
 const colz = require('colz');
 
-export default class ShapeNode extends NodeResolver {
+export default class ShapeTextProcessor extends NodeProcessor {
   node: any
   slideLayoutSpNode: any
   slideMasterSpNode: any

@@ -1,9 +1,9 @@
-import PicNode from './resolver/node_pic';
-import ShapeNode from './resolver/node_shapetext';
 import PPTXProvider from './provider';
-import { GlobalProps, SingleSlide } from './model';
+import { CssStyle, GlobalProps, SingleSlide } from './model';
 import { extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
-import GraphicNode from './resolver/node_graphic'
+import PicProcessor from './processor/pic';
+import ShapeTextProcessor from './processor/shapetext';
+import GraphicProcessor from './processor/graphic'
 
 export default class SlideProcessor {
   // slide的内容节点
@@ -14,8 +14,9 @@ export default class SlideProcessor {
   masterBg: any
 
   constructor(
-    private readonly provider: PPTXProvider,
     private readonly slidePath: string,
+    private readonly index: number,
+    private readonly provider: PPTXProvider,
     gprops: GlobalProps,
     private readonly globalCssStyles: any,
   ) {
@@ -90,17 +91,23 @@ export default class SlideProcessor {
   async genHtml() {
     let { slideWidth, slideHeight } = this.gprops
     let { bgColor } = this.slide!
-    let bg = ""
     
+    let styleName = `section-${this.index}`
+    let style = new CssStyle(styleName)
+
     if (this.layoutBg) {
-      bg = `background-image: url(data:image/png;base64,${this.layoutBg})`
+      style.addBGBase64Img(this.layoutBg)
     } else if (this.masterBg) {
-      bg = `background-image: url(data:image/png;base64,${this.masterBg})`
+      style.addBGBase64Img(this.masterBg)
     }
 
-    let result = `
-<section style="width: ${slideWidth}px; height: ${slideHeight}px; background-color: #${bgColor}; ${bg}; background-size: cover;">
-`
+    style.addWidth(slideWidth!)
+    style.addHeight(slideHeight!)
+    style.add("background-color", "#" + bgColor!)
+    style.add("background-size", "cover")
+    this.gprops.addStyle(styleName, style)
+
+    let result = `<section class="${styleName}">`
     let nodes = this.slideNodes
 
     for (let nodeKey in nodes) {
@@ -115,10 +122,8 @@ export default class SlideProcessor {
       }
     }
 
-
     return result + "</section>";
   }
-
 
   async getSlideRes(slidePath: string) {
     let slideResPath = slidePath.replace("slides/slide", "slides/_rels/slide") + ".rels";
@@ -279,10 +284,10 @@ export default class SlideProcessor {
     return { "idTable": idTable, "idxTable": idxTable, "typeTable": typeTable };
   }
 
-  async processSlideNode(nodeKey: string, nodeVal: any) {
+  async processSlideNode(nodeType: string, nodeVal: any) {
     let result = "";
 
-    switch (nodeKey) {
+    switch (nodeType) {
       case "p:sp":    // Shape, Text
         result = await this.processShapeAndTextNode(nodeVal);
         break;
@@ -306,23 +311,23 @@ export default class SlideProcessor {
   }
 
   async processShapeAndTextNode(nodeVal: any) {
-    let sp = new ShapeNode(this.provider, this.slide!, nodeVal, this.globalCssStyles, false)
+    let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles, false)
     let html = await sp.genHTML()
     return html
   }
 
   async processCxnSpNode(nodeVal: any) {
-    let sp = new ShapeNode(this.provider, this.slide!, nodeVal, this.globalCssStyles, true)
+    let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles, true)
     return await sp.genHTML()
   }
 
   async processPicNode(nodeVal: any) {
-    let picNode = new PicNode(this.provider, this.slide!, nodeVal, this.globalCssStyles)
+    let picNode = new PicProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles)
     return await picNode.genHTML()
   }
 
   async processGraphicFrameNode(nodeVal: any) {
-    let n = new GraphicNode(this.provider, this.slide!, nodeVal, this.globalCssStyles)
+    let n = new GraphicProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles)
     return await n.genHTML()
   }
 

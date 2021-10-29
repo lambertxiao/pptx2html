@@ -2,7 +2,7 @@ import PPTXProvider from '../provider';
 import { SingleSlide } from '../model';
 import { computePixel, extractTextByPath } from '../util';
 
-export default abstract class NodeResolver {
+export default abstract class NodeProcessor {
   provider: PPTXProvider
   slide: SingleSlide
   node: any
@@ -71,8 +71,6 @@ export default abstract class NodeResolver {
           return "width:" + w + "px; height:" + h + "px;";
         }
       }
-
-      // return (isNaN(w) || isNaN(h)) ? "" : "width:" + w + "px; height:" + h + "px;";
     }
   }
 

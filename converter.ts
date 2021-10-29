@@ -1,4 +1,4 @@
-import SlideProcessor from './slide_processor'
+import SlideProcessor from './slideproc'
 import PPTXProvider from './provider'
 import { computePixel, img2Base64 } from './util'
 import { GlobalProps } from './model'
@@ -97,25 +97,32 @@ export default class PPTXConverter {
   }
 
   async processSlides() {
-    let html = ""
+    let slidesHtml = ""
+
     let i = 0
-    
     for (const slide of this.gprops?.slidePaths!) {
-      let processor = new SlideProcessor(this.provider!, slide, this.gprops!, this.globalCssStyles)
+      let processor = new SlideProcessor(
+        slide, i, this.provider!,  this.gprops!, this.globalCssStyles
+      )
       let content = await processor.process()
-      html += `<div class="item ${i} ${i == 0 ? "active" : ""}" >${content}</div>`
+      slidesHtml += `<div class="item ${i} ${i == 0 ? "active" : ""}" >${content}</div>`
       i++
     }
 
+    let html = this.mixContent(slidesHtml)
+    fs.writeFileSync(this.getOutputName(), html)
+  }
+
+  mixContent(slidesContent: string) {
     let template = fs.readFileSync("./web/pptx.html").toString()
     let cssContent = fs.readFileSync("./web/pptx.css").toString()
 
     let globalCss = this.genGlobalCSS()
-    let content = template.replace("{{content}}", html)
+    let content = template.replace("{{content}}", slidesContent)
     content = content.replace("{{style}}", cssContent + " " + globalCss)
     content = content.replace("{{width}}", this.gprops!.slideWidth + "")
-    
-    fs.writeFileSync(this.getOutputName(), content)
+
+    return content
   }
 
   getOutputName(): string {
@@ -127,6 +134,11 @@ export default class PPTXConverter {
     for (var key in this.globalCssStyles) {
       cssText += "section ." + this.globalCssStyles[key]["name"] + "{" + this.globalCssStyles[key]["text"] + "}\n";
     }
+
+    for (const styleName in this.gprops.globalStyles) {
+      cssText += this.gprops.globalStyles[styleName].toString()
+    }
+
     return cssText;
   }
 }

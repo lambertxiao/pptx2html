@@ -1,8 +1,8 @@
 import { randomInt } from 'crypto';
 import { extractTextByPath } from '../util';
-import NodeResolver from './base';
+import NodeProcessor from './processor';
 
-export default class GraphicNode extends NodeResolver {
+export default class GraphicProcessor extends NodeProcessor {
 
   async genHTML() {
     let node = this.node

@@ -1,7 +1,7 @@
 import { extractFileExtension, img2Base64 } from '../util';
-import NodeResolver from './base';
+import NodeProcessor from './processor';
 
-export default class PicNode extends NodeResolver {
+export default class PicProcessor extends NodeProcessor {
 
   async genHTML() {
     let node = this.node
