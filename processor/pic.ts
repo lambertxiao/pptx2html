@@ -7,7 +7,7 @@ export default class PicProcessor extends NodeProcessor {
     let node = this.node
     let order = node["attrs"]["order"];
     let rid = node["p:blipFill"]["a:blip"]["attrs"]["r:embed"];
-    let imgName = this.slide.resContent[rid]["target"];
+    let imgName = this.slide.getTargetResByID(rid)
     let imgFileExt = extractFileExtension(imgName).toLowerCase();
     let imgArrayBuffer = await this.provider.loadArrayBuffer(imgName)
     let mimeType = "";
@@ -43,15 +43,13 @@ export default class PicProcessor extends NodeProcessor {
 
     let position = this.getPosition(xfrmNode, undefined, undefined)
     let size = this.getSize(xfrmNode, undefined, undefined)
+    let img = `data:${mimeType};base64,${img2Base64(imgArrayBuffer)}`
+
 
     return `
       <div class="block content" z-index: ${order}; style="${position} ${size}">
-        <img src="data:${mimeType};base64,${img2Base64(imgArrayBuffer)}" style="width: 100%; height: 100%; ${imgBorderRadius}"/>
+        <img src="${img}" style="width: 100%; height: 100%; ${imgBorderRadius}"/>
       </div>
     `
-
-    // return "<div class='block content' style='" + this.getPosition(xfrmNode, undefined, undefined) + this.getSize(xfrmNode, undefined, undefined) +
-      // " z-index: " + order + ";" +
-      // "'><img src=\"data:" + mimeType + ";base64," + img2Base64(imgArrayBuffer) + "\" style='width: 100%; height: 100%'/></div>";
   }
 }

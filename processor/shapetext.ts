@@ -408,13 +408,13 @@ export default class ShapeTextProcessor extends NodeProcessor {
     // From theme
     if (fillColor === undefined) {
       let schemeClr = "a:" + extractTextByPath(node, ["p:spPr", "a:solidFill", "a:schemeClr", "attrs", "val"]);
-      fillColor = this.getSchemeColorFromTheme(schemeClr);
+      fillColor = this.getSchemeColor(schemeClr);
     }
 
     // 2. drawingML namespace
     if (fillColor === undefined) {
       let schemeClr = "a:" + extractTextByPath(node, ["p:style", "a:fillRef", "a:schemeClr", "attrs", "val"]);
-      fillColor = this.getSchemeColorFromTheme(schemeClr);
+      fillColor = this.getSchemeColor(schemeClr);
     }
 
     if (fillColor !== undefined) {
@@ -489,14 +489,14 @@ export default class ShapeTextProcessor extends NodeProcessor {
     if (borderColor === undefined) {
       let schemeClrNode = extractTextByPath(lineNode, ["a:solidFill", "a:schemeClr"]);
       let schemeClr = "a:" + extractTextByPath(schemeClrNode, ["attrs", "val"]);
-      borderColor = this.getSchemeColorFromTheme(schemeClr);
+      borderColor = this.getSchemeColor(schemeClr);
     }
 
     // 2. drawingML namespace
     if (borderColor === undefined) {
       let schemeClrNode = extractTextByPath(node, ["p:style", "a:lnRef", "a:schemeClr"]);
       let schemeClr = "a:" + extractTextByPath(schemeClrNode, ["attrs", "val"]);
-      let borderColor = this.getSchemeColorFromTheme(schemeClr);
+      let borderColor = this.getSchemeColor(schemeClr);
 
       if (borderColor !== undefined) {
         let shade = extractTextByPath(schemeClrNode, ["a:shade", "attrs", "val"]);
@@ -577,21 +577,5 @@ export default class ShapeTextProcessor extends NodeProcessor {
     } else {
       return cssText + ";";
     }
-  }
-
-  getSchemeColorFromTheme(schemeClr: string) {
-    switch (schemeClr) {
-      case "tx1": schemeClr = "a:dk1"; break;
-      case "tx2": schemeClr = "a:dk2"; break;
-      case "bg1": schemeClr = "a:lt1"; break;
-      case "bg2": schemeClr = "a:lt2"; break;
-    }
-    let refNode = extractTextByPath(this.slide!.gprops!.theme, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
-    let color = extractTextByPath(refNode, ["a:srgbClr", "attrs", "val"]);
-    if (color === undefined) {
-      color = extractTextByPath(refNode, ["a:sysClr", "attrs", "lastClr"]);
-    }
-
-    return color;
   }
 }

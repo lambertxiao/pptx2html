@@ -22,6 +22,10 @@ export default abstract class NodeProcessor {
 
 	abstract genHTML(): Promise<string>
 
+  getSchemeColor(clr: string) {
+    return this.slide.gprops!.theme!.getSchemeColor(clr)
+  }
+
 	getPosition(slideSpNode: any, slideLayoutSpNode: any, slideMasterSpNode: any) {
     let off = undefined;
     let x = -1, y = -1;

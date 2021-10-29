@@ -1,7 +1,7 @@
 import SlideProcessor from './slideproc'
 import PPTXProvider from './provider'
 import { computePixel, img2Base64 } from './util'
-import { GlobalProps } from './model'
+import { GlobalProps, ThemeContent } from './model'
 import fs from 'fs'
 import path from 'node:path'
 
@@ -31,7 +31,7 @@ export default class PPTXConverter {
 
     this.gprops.slidePaths = slidePaths
     this.gprops.slideLayouts = slideLayouts
-    this.gprops.theme = await this.loadTheme()
+    this.gprops.theme = new ThemeContent(await this.loadTheme()) 
 
     await this.processSlides()
   }
