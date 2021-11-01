@@ -8,6 +8,8 @@ import GraphicProcessor from './processor/graphic'
 export default class SlideProcessor {
   // slide的内容节点
   slideNodes?: any
+  slideLayoutNodes?: any
+
   gprops: GlobalProps
   slide?: SingleSlide
   layoutBg: any
@@ -59,11 +61,16 @@ export default class SlideProcessor {
     }
 
     this.slideNodes = this.slide?.content["p:sld"]["p:cSld"]["p:spTree"]
+    this.slideLayoutNodes = this.slide.layoutContent["p:sldLayout"]["p:cSld"]["p:spTree"]
     slide.bgColor = this.getSlideBackgroundColor()
   }
 
   loadLayoutBg() {
     let resId = extractTextByPath(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    if (!resId) {
+      resId = extractTextByPath(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    }
+    
     let relationships = this.slide!.layoutResContent["Relationships"]["Relationship"]
 
     for (const relationship of relationships) {
@@ -108,8 +115,25 @@ export default class SlideProcessor {
     this.gprops.addStyle(styleName, style)
 
     let result = `<section class="${styleName}">`
-    let nodes = this.slideNodes
+    
+    let slideLayoutNodes = this.slideLayoutNodes
+    for (const nodeKey in slideLayoutNodes) {
+      if (nodeKey != "p:pic") {
+        continue
+      }
+      
+      if (slideLayoutNodes[nodeKey].constructor === Array) {
+        for (let i = 0; i < slideLayoutNodes[nodeKey].length; i++) {
+          let item = await this.processSlideNode(nodeKey, slideLayoutNodes[nodeKey][i])
+          result += item
+        }
+      } else {
+        let item = await this.processSlideNode(nodeKey, slideLayoutNodes[nodeKey])
+        result += item
+      }
+    }
 
+    let nodes = this.slideNodes
     for (let nodeKey in nodes) {
       if (nodes[nodeKey].constructor === Array) {
         for (let i = 0; i < nodes[nodeKey].length; i++) {

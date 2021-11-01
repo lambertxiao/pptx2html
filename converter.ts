@@ -107,6 +107,10 @@ export default class PPTXConverter {
       let content = await processor.process()
       slidesHtml += `<div class="item ${i} ${i == 0 ? "active" : ""}" >${content}</div>`
       i++
+
+      // if (i == 1) {
+      //   break
+      // }
     }
 
     let html = this.mixContent(slidesHtml)

@@ -8,7 +8,7 @@ export class GlobalProps {
   thumbnail?: string
   theme?: ThemeContent
 
-  globalStyles: {[key: string]: CssStyle} = {}
+  globalStyles: { [key: string]: CssStyle } = {}
 
   addStyle(name: string, val: CssStyle) {
     this.globalStyles[name] = val
@@ -36,15 +36,26 @@ export class SingleSlide {
   gprops?: GlobalProps
 
   getTargetResByID(rid: string) {
-    return this.resContent[rid]["target"];
+    if (this.resContent[rid]) {
+      return this.resContent[rid]["target"];
+    }
+
+    let lrss = this.layoutResContent["Relationships"]["Relationship"]
+    for (const rs of lrss) {
+      if (rs["attrs"]["Id"] == rid) {
+        return rs["attrs"]["Target"].replace("../", "ppt/");
+      }
+    }
+
+    return ""
   }
 
-  queryLayoutIndex() {}
+  queryLayoutIndex() { }
 }
 
 export class CssStyle {
 
-  content: {[key: string]: string} = {}
+  content: { [key: string]: string } = {}
 
   constructor(private readonly name: string) {
     this.name = name
@@ -78,7 +89,7 @@ export class CssStyle {
 
 export class ThemeContent {
 
-  constructor(private readonly content: any) {}
+  constructor(private readonly content: any) { }
 
   getSchemeColor(schemeClr: string) {
     switch (schemeClr) {
@@ -99,7 +110,7 @@ export class ThemeContent {
 
 export class Node {
 
-  constructor(private readonly content: any) {}
+  constructor(private readonly content: any) { }
 
   getSubNode() {
 

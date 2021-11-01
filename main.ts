@@ -15,12 +15,6 @@ async function main() {
 
   let converter = new PPTXConverter(srcFile, outDir)
   await converter.run()
-
-  // let filepath = "/Users/lambert.xiao/workspace/mpptx2html/temp/demo.pptx"
-  // // let filepath = "/Users/lambert.xiao/Documents/UDI规划.pptx"
-
-  // let converter = new PPTXConverter(provider)
-  // await converter.loadPPTX()
 }
 
 main()
