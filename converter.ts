@@ -4,6 +4,7 @@ import { computePixel, img2Base64 } from './util'
 import { GlobalProps, ThemeContent } from './model'
 import fs from 'fs'
 import path from 'node:path'
+import { Drawer } from './drawer'
 
 export default class PPTXConverter {
   srcFilePath: string
@@ -11,13 +12,15 @@ export default class PPTXConverter {
   gprops: GlobalProps
   globalCssStyles: any
   provider: PPTXProvider
+  drawer: Drawer
 
-  constructor(srcFilePath: string, outDir: string) {
+  constructor(srcFilePath: string, outDir: string, drawer: Drawer) {
     this.srcFilePath = srcFilePath
     this.outDir = outDir
     this.globalCssStyles = {}
     this.gprops = new GlobalProps()
     this.provider = new PPTXProvider(this.srcFilePath)
+    this.drawer = drawer
   }
 
   async run() {

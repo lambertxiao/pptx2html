@@ -1,4 +1,6 @@
+import { table } from 'console';
 import { randomInt } from 'crypto';
+import { ChartNode, DiagramNode, TableCol, TableNode, TableRow, TextNode } from '../model';
 import { extractTextByPath } from '../util';
 import NodeProcessor from './processor';
 
@@ -6,35 +8,36 @@ export default class GraphicProcessor extends NodeProcessor {
 
   async genHTML() {
     let node = this.node
-    let result = "";
     let graphicTypeUri = extractTextByPath(node, ["a:graphic", "a:graphicData", "attrs", "uri"]);
 
     switch (graphicTypeUri) {
       case "http://schemas.openxmlformats.org/drawingml/2006/table":
-        result = this.genTable(node);
-        break;
+        return this.genTable(node);
       case "http://schemas.openxmlformats.org/drawingml/2006/chart":
-        result = this.genChart(node);
-        break;
+        return new ChartNode()
       case "http://schemas.openxmlformats.org/drawingml/2006/diagram":
-        result = this.genDiagram(node);
-        break;
+        return new DiagramNode()
       default:
+        return null
     }
-
-    return result;
   }
 
   genTable(node: any) {
     let order = node["attrs"]["order"];
-    let tableNode = extractTextByPath(node, ["a:graphic", "a:graphicData", "a:tbl"]);
+    let _tableNode = extractTextByPath(node, ["a:graphic", "a:graphicData", "a:tbl"]);
     let xfrmNode = extractTextByPath(node, ["p:xfrm"]);
-    let tableHtml = "<table style='" + this.getPosition(xfrmNode, undefined, undefined) + this.getSize(xfrmNode, undefined, undefined) + " z-index: " + order + ";'>";
 
-    let trNodes = tableNode["a:tr"];
+    let { top, left } = this.getPosition(xfrmNode, undefined, undefined)
+    let tableNode = new TableNode()
+    tableNode.top = top
+    tableNode.left = left
+    tableNode.zindex = order
+
+    let trNodes = _tableNode["a:tr"];
+    
     if (trNodes.constructor === Array) {
       for (let i = 0; i < trNodes.length; i++) {
-        tableHtml += "<tr>";
+        let row = new TableRow()
         let tcNodes = trNodes[i]["a:tc"];
 
         if (tcNodes.constructor === Array) {
@@ -44,37 +47,41 @@ export default class GraphicProcessor extends NodeProcessor {
             let colSpan = extractTextByPath(tcNodes[j], ["attrs", "gridSpan"]);
             let vMerge = extractTextByPath(tcNodes[j], ["attrs", "vMerge"]);
             let hMerge = extractTextByPath(tcNodes[j], ["attrs", "hMerge"]);
-            if (rowSpan !== undefined) {
-              tableHtml += "<td rowspan='" + parseInt(rowSpan) + "'>" + text + "</td>";
-            } else if (colSpan !== undefined) {
-              tableHtml += "<td colspan='" + parseInt(colSpan) + "'>" + text + "</td>";
-            } else if (vMerge === undefined && hMerge === undefined) {
-              tableHtml += "<td>" + text + "</td>";
-            }
+            
+            let col = new TableCol()
+            col.rowSpan = rowSpan
+            col.colSpan = colSpan
+            col.text = text
+
+            row.cols.push(col)
           }
         } else {
-          let text = this.genTextBody(tcNodes["a:txBody"], "");
-          tableHtml += "<td>" + text + "</td>";
+          let col = new TableCol()
+          col.text = this.genTextBody(tcNodes["a:txBody"], "")
+          row.cols.push(col)
         }
-        tableHtml += "</tr>";
       }
     } else {
-      tableHtml += "<tr>";
-      let tcNodes = trNodes["a:tc"];
+      let row = new TableRow()
+      let tcNodes = trNodes["a:tc"]
+      let col = new TableCol()
+
       if (tcNodes.constructor === Array) {
         for (let j = 0; j < tcNodes.length; j++) {
-          let text = this.genTextBody(tcNodes[j]["a:txBody"], "");
-          tableHtml += "<td>" + text + "</td>";
+          let tn = this.genTextBody(tcNodes[j]["a:txBody"], "")
+          col.text = tn
+          row.cols.push(col)
         }
       } else {
-        let text = this.genTextBody(tcNodes["a:txBody"], "");
-        tableHtml += "<td>" + text + "</td>";
+        let tn = this.genTextBody(tcNodes["a:txBody"], "");
+        col.text = tn
+        row.cols.push(col)
       }
-      tableHtml += "</tr>";
+
+      tableNode.rows.push(row);
     }
 
-    tableHtml += "</table>"
-    return tableHtml;
+    return tableNode;
   }
 
   genChart(node: any) {

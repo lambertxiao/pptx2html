@@ -1,3 +1,4 @@
+import { PicNode } from '../model';
 import { extractFileExtension, img2Base64 } from '../util';
 import NodeProcessor from './processor';
 
@@ -35,21 +36,33 @@ export default class PicProcessor extends NodeProcessor {
         mimeType = "image/*";
     }
 
-    let imgBorderRadius
+    let borderRadius: number = 0
     // 圆角矩形xml里没有给出具体的边弧度
     if (prst == "roundRect") {
-      imgBorderRadius = "border-radius: 40px;"
+      borderRadius = 40
     }
 
-    let position = this.getPosition(xfrmNode, undefined, undefined)
-    let size = this.getSize(xfrmNode, undefined, undefined)
+    let { top, left } = this.getPosition(xfrmNode, undefined, undefined)
+    let { width, height } = this.getSize(xfrmNode, undefined, undefined)
     let img = `data:${mimeType};base64,${img2Base64(imgArrayBuffer)}`
 
+    let pn: PicNode = {
+      eleType: "pic",
+      width: width,
+      height: height,
+      zindex: order,
+      top: top,
+      left: left,
+      imgUrl: img,
+      mimeType: mimeType,
+      borderRadius: borderRadius,
+    }
 
-    return `
-      <div class="block content" z-index: ${order}; style="${position} ${size}">
-        <img src="${img}" style="width: 100%; height: 100%; ${imgBorderRadius}"/>
-      </div>
-    `
+    return pn
+    // return `
+    //   <div class="block content" z-index: ${order}; style="${position} ${size}">
+    //     <img src="${img}" style="width: 100%; height: 100%; ${imgBorderRadius}"/>
+    //   </div>
+    // `
   }
 }

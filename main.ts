@@ -2,6 +2,7 @@ import PPTXConverter from "./converter";
 import PPTXProvider from "./provider";
 import { program } from "commander"
 import path from "node:path";
+import { HtmlDrawer } from "./drawer";
 
 async function main() {
   program
@@ -13,7 +14,9 @@ async function main() {
   let srcFile = path.resolve(options.src)
   let outDir = path.resolve(options.outdir)
 
-  let converter = new PPTXConverter(srcFile, outDir)
+
+  let drawer = new HtmlDrawer()
+  let converter = new PPTXConverter(srcFile, outDir, drawer)
   await converter.run()
 }
 

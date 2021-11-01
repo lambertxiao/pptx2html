@@ -1,5 +1,5 @@
 import PPTXProvider from '../provider';
-import { SingleSlide } from '../model';
+import { NodeElement, SingleSlide, SpanNode, TextNode } from '../model';
 import { computePixel, extractTextByPath } from '../util';
 
 export default abstract class NodeProcessor {
@@ -9,8 +9,8 @@ export default abstract class NodeProcessor {
   globalCssStyles: any
 
   constructor(
-    provider: PPTXProvider, 
-    slide: SingleSlide, 
+    provider: PPTXProvider,
+    slide: SingleSlide,
     node: any,
     globalCssStyles: any
   ) {
@@ -20,13 +20,13 @@ export default abstract class NodeProcessor {
     this.globalCssStyles = globalCssStyles
   }
 
-	abstract genHTML(): Promise<string>
+  abstract genHTML(): Promise<NodeElement | null>
 
   getSchemeColor(clr: string) {
     return this.slide.gprops!.theme!.getSchemeColor(clr)
   }
 
-	getPosition(slideSpNode: any, slideLayoutSpNode: any, slideMasterSpNode: any) {
+  getPosition(slideSpNode: any, slideLayoutSpNode: any, slideMasterSpNode: any) {
     let off = undefined;
     let x = -1, y = -1;
 
@@ -39,15 +39,15 @@ export default abstract class NodeProcessor {
     }
 
     if (off === undefined) {
-      return "";
+      return { top: 0, left: 0 };
     } else {
       x = computePixel(off["x"])
       y = computePixel(off["y"])
-      return (isNaN(x) || isNaN(y)) ? "" : "top:" + y + "px; left:" + x + "px;";
+      return { top: y, left: x }
     }
   }
 
-	getSize(slideSpNode: any, slideLayoutSpNode: any, slideMasterSpNode: any) {
+  getSize(slideSpNode: any, slideLayoutSpNode: any, slideMasterSpNode: any) {
     let ext = undefined;
     let w = -1, h = -1;
 
@@ -60,25 +60,15 @@ export default abstract class NodeProcessor {
     }
 
     if (ext === undefined) {
-      return "";
+      return { width: 0, height: 0 }
     } else {
-      
       w = computePixel(ext["cx"])
       h = computePixel(ext["cy"])
-
-      if (isNaN(w) || isNaN(h)) {
-        return ""
-      } else {
-        if (h == 0) {
-          return "width:" + w + "px;";
-        } else {
-          return "width:" + w + "px; height:" + h + "px;";
-        }
-      }
+      return { width: w, height: h }
     }
   }
 
-	genBuChar(node: any) {
+  genBuChar(node: any): SpanNode | null {
     let pPrNode = node["a:pPr"];
     let lvl = parseInt(extractTextByPath(pPrNode, ["attrs", "lvl"]));
     if (isNaN(lvl)) {
@@ -86,89 +76,95 @@ export default abstract class NodeProcessor {
     }
 
     let buChar = extractTextByPath(pPrNode, ["a:buChar", "attrs", "char"]);
-    if (buChar !== undefined) {
-      let buFontAttrs = extractTextByPath(pPrNode, ["a:buFont", "attrs"]);
-      if (buFontAttrs !== undefined) {
-        let marginLeft = parseInt(extractTextByPath(pPrNode, ["attrs", "marL"])) * 96 / 914400;
-        let marginRight = parseInt(buFontAttrs["pitchFamily"]);
-        
-        if (isNaN(marginLeft)) {
-          marginLeft = 328600 * 96 / 914400;
-        }
-        if (isNaN(marginRight)) {
-          marginRight = 0;
-        }
-        
-        let typeface = buFontAttrs["typeface"];
+    if (!buChar) {
+      return null
+    }
 
-        return "<span style='font-family: " + typeface +
-          "; margin-left: " + marginLeft * lvl + "px" +
-          "; margin-right: " + marginRight + "px" +
-          "; font-size: 20pt" +
-          "'>" + buChar + "</span>";
-      } else {
-        let marginLeft = 328600 * 96 / 914400 * lvl;
-        return "<span style='margin-left: " + marginLeft + "px;'>" + buChar + "</span>";
+    let buFontAttrs = extractTextByPath(pPrNode, ["a:buFont", "attrs"]);
+    let spanNode: SpanNode = {
+      content: buChar,
+    }
+
+    if (buFontAttrs !== undefined) {
+      let marginLeft = parseInt(extractTextByPath(pPrNode, ["attrs", "marL"])) * 96 / 914400;
+      let marginRight = parseInt(buFontAttrs["pitchFamily"]);
+
+      if (isNaN(marginLeft)) {
+        marginLeft = 328600 * 96 / 914400;
       }
+      if (isNaN(marginRight)) {
+        marginRight = 0;
+      }
+
+      spanNode.fontFamily = buFontAttrs["typeface"]
+      spanNode.marginLeft = marginLeft * lvl
+      spanNode.marginRight = marginRight
+      spanNode.fontSize = 20
+      spanNode.fontSizeUnit = "pt"
+
+      return spanNode
     } else {
-      //buChar = '•';
-      return "<span style='margin-left: " + 328600 * 96 / 914400 * lvl + "px" +
-        "; margin-right: " + 0 + "px;'></span>";
+      let marginLeft = 328600 * 96 / 914400 * lvl;
+      spanNode.marginLeft = marginLeft
+      return spanNode
     }
   }
 
-	genTextBody(textBodyNode: any, type?: string) {
-    let text = "";
-    if (textBodyNode === undefined) {
-      return text;
+  genTextBody(textBodyNode: any, type?: string): TextNode | undefined {
+    if (!textBodyNode) {
+      return undefined;
     }
 
+    let textNode: TextNode = {
+      eleType: "text",
+      spanList: []
+    }
+    
     if (textBodyNode["a:p"].constructor === Array) {
-      // multi p
+      // 多个文本段
       for (let i = 0; i < textBodyNode["a:p"].length; i++) {
         let pNode = textBodyNode["a:p"][i];
         let rNode = pNode["a:r"];
-        text += "<div class='" + this.getHorizontalAlign(pNode, type) + "'>";
-        text += this.genBuChar(pNode);
+        textNode.styleClass = this.getHorizontalAlign(pNode, type) 
+        textNode.content = this.genBuChar(pNode)
+        
         if (rNode === undefined) {
-          // without r
-          text += this.genSpanElement(pNode, type);
+          textNode.spanList!.push(this.genSpanElement(pNode, type))
         } else if (rNode.constructor === Array) {
-          // with multi r
           for (let j = 0; j < rNode.length; j++) {
-            text += this.genSpanElement(rNode[j], type);
+            textNode.spanList!.push(this.genSpanElement(rNode[j], type))
           }
         } else {
-          // with one r
-          text += this.genSpanElement(rNode, type);
+          textNode.spanList!.push(this.genSpanElement(rNode, type))
         }
-        text += "</div>";
       }
     } else {
-      // one p
-      let pNode = textBodyNode["a:p"];
-      let rNode = pNode["a:r"];
-      text += "<div class='" + this.getHorizontalAlign(pNode, type) + "'>";
-      text += this.genBuChar(pNode);
-      if (rNode === undefined) {
-        // without r
-        text += this.genSpanElement(pNode, type);
+      // 单个文本段
+      let pNode = textBodyNode["a:p"]
+      let rNode = pNode["a:r"]
+      let styleClass = this.getHorizontalAlign(pNode, type)
+      
+      textNode.styleClass = styleClass
+      let content = this.genBuChar(pNode)
+      if (content) {
+        textNode.content = content
+      }
+
+      if (!rNode) {
+        textNode.spanList!.push(this.genSpanElement(pNode, type))
       } else if (rNode.constructor === Array) {
-        // with multi r
         for (let j = 0; j < rNode.length; j++) {
-          text += this.genSpanElement(rNode[j], type);
+          textNode.spanList!.push(this.genSpanElement(rNode[j], type))
         }
       } else {
-        // with one r
-        text += this.genSpanElement(rNode, type);
+        textNode.spanList!.push(this.genSpanElement(rNode, type))
       }
-      text += "</div>";
     }
 
-    return text;
+    return textNode;
   }
 
-	getHorizontalAlign(node: any, type?: string) {
+  getHorizontalAlign(node: any, type?: string) {
     let algn = extractTextByPath(node, ["a:pPr", "attrs", "algn"]);
     if (algn === undefined) {
       algn = extractTextByPath(this.slide.layoutContent, ["p:txBody", "a:p", "a:pPr", "attrs", "algn"]);
@@ -198,7 +194,7 @@ export default abstract class NodeProcessor {
     return algn === "ctr" ? "h-mid" : algn === "r" ? "h-right" : "h-left";
   }
 
-	genSpanElement(node: any, type?: string) {
+  genSpanElement(node: any, type?: string): SpanNode {
     let text = node["a:t"];
     if (typeof text !== 'string') {
       text = extractTextByPath(node, ["a:fld", "a:t"]);
@@ -207,36 +203,18 @@ export default abstract class NodeProcessor {
       }
     }
 
-    let styleText =
-      "color:" + this.getFontColor(node) +
-      ";font-size:" + this.getFontSize(node, this.slide.layoutResContent, type, this.slide.masterTextStyles!) +
-      ";font-family:" + this.getFontType(node, type) +
-      ";font-weight:" + this.getFontBold(node) +
-      ";font-style:" + this.getFontItalic(node) +
-      ";text-decoration:" + this.getFontDecoration(node) +
-      ";vertical-align:" + this.getTextVerticalAlign(node) +
-      ";";
-
-    let cssName = "";
-    let globalCssStyles = this.globalCssStyles
-
-    if (styleText in globalCssStyles) {
-      cssName = globalCssStyles[styleText]["name"];
-    } else {
-      cssName = "_css_" + (Object.keys(globalCssStyles).length + 1);
-      globalCssStyles[styleText] = {
-        "name": cssName,
-        "text": styleText
-      };
+    let sn: SpanNode = {
+      color: this.getFontColor(node),
+      fontSize: this.getFontSize(node, this.slide.layoutResContent, type, this.slide.masterTextStyles!),
+      fontFamily: this.getFontType(node, type),
+      fontStyle: this.getFontItalic(node),
+      textDecoration: this.getFontDecoration(node),
+      verticalAlign: this.getTextVerticalAlign(node),
+      linkID: extractTextByPath(node, ["a:rPr", "a:hlinkClick", "attrs", "r:id"]),
+      content: text,
     }
-
-    let linkID = extractTextByPath(node, ["a:rPr", "a:hlinkClick", "attrs", "r:id"]);
-    if (linkID !== undefined) {
-      let linkURL = this.slide.resContent[linkID]["target"];
-      return "<span class='text-block " + cssName + "'><a href='" + linkURL + "' target='_blank'>" + text.replace(/\s/i, "&nbsp;") + "</a></span>";
-    } else {
-      return "<span class='text-block " + cssName + "'>" + text.replace(/\s/i, "&nbsp;") + "</span>";
-    }
+    
+    return sn
   }
 
   getFontType(node: any, type: any) {
@@ -315,4 +293,4 @@ export default abstract class NodeProcessor {
     let baseline = extractTextByPath(node, ["a:rPr", "attrs", "baseline"]);
     return baseline === undefined ? "baseline" : (parseInt(baseline) / 1000) + "%";
   }
-}	
+}

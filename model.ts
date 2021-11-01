@@ -108,11 +108,83 @@ export class ThemeContent {
   }
 }
 
-export class Node {
+export class NodeElement {
+  eleType?: string
+  zindex?: string
+  width?: number
+  height?: number
+  top?: number
+  left?: number
+}
 
-  constructor(private readonly content: any) { }
+export interface Border {
+  color: string
+  type: string
+  width: number
+  widthUnit: string
+  strokeDasharray: any
+}
 
-  getSubNode() {
+export class PicNode extends NodeElement {
+  imgUrl?: string
+  mimeType?: string
+  borderRadius?: number
+}
 
-  }
+export class ShapeNode extends NodeElement {
+  shapeType?: string
+  bgColor?: string
+  textNode?: TextNode
+  border?: Border
+  ShapeWidth?: number
+  ShapeHeight?: number
+}
+
+export class TextNode extends NodeElement {
+  eleType = "text"
+  textType?: string
+  color?: string
+  fontSize?: number
+  fontFamily?: string
+  content?: SpanNode | null
+  styleClass?: string
+  spanList?: SpanNode[]
+}
+
+export class SpanNode {
+  marginLeft?: number
+  marginRight?: number
+  fontSize?: number | string
+  fontSizeUnit?: string
+  fontFamily?: string
+  fontStyle?: string
+  textDecoration?: string
+  verticalAlign?: string
+  content: any
+  color?: string
+  // 有超链接
+  linkID?: string
+}
+
+export class TableCol {
+  rowSpan?: number
+  colSpan?: number
+  text?: TextNode
+}
+
+export class TableRow {
+  cols: TableCol[] = []
+}
+
+export class TableNode extends NodeElement {
+  eleType = "table"
+  rows: TableRow[] = []
+}
+
+export class ChartNode extends NodeElement {
+  eleType = "chart"
+}
+
+export class DiagramNode extends NodeElement {
+  eleType = "diagram"
 }

@@ -1,5 +1,5 @@
 import PPTXProvider from './provider';
-import { CssStyle, GlobalProps, SingleSlide } from './model';
+import { CssStyle, GlobalProps, NodeElement, SingleSlide } from './model';
 import { extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
 import PicProcessor from './processor/pic';
 import ShapeTextProcessor from './processor/shapetext';
@@ -308,30 +308,29 @@ export default class SlideProcessor {
     return { "idTable": idTable, "idxTable": idxTable, "typeTable": typeTable };
   }
 
-  async processSlideNode(nodeType: string, nodeVal: any) {
-    let result = "";
-
+  async processSlideNode(nodeType: string, nodeVal: any): Promise<NodeElement | null> {
+    let node: NodeElement | null = null
     switch (nodeType) {
       case "p:sp":    // Shape, Text
-        result = await this.processShapeAndTextNode(nodeVal);
+        node = await this.processShapeAndTextNode(nodeVal);
         break;
       case "p:cxnSp":    // Shape, Text (with connection)
-        result = await this.processCxnSpNode(nodeVal);
+        node = await this.processCxnSpNode(nodeVal);
         break;
       case "p:pic":    // Picture
-        result = await this.processPicNode(nodeVal);
+        node = await this.processPicNode(nodeVal);
         break;
       case "p:graphicFrame":    // Chart, Diagram, Table
-        result = await this.processGraphicFrameNode(nodeVal);
+        node = await this.processGraphicFrameNode(nodeVal);
         break;
-      case "p:grpSp":    // 群組
-        result = await this.processGroupSpNode(nodeVal);
-        break;
+      // case "p:grpSp":    // 群組
+      //   node = await this.processGroupSpNode(nodeVal);
+      //   break;
       default:
         break
     }
 
-    return result;
+    return node;
   }
 
   async processShapeAndTextNode(nodeVal: any) {
