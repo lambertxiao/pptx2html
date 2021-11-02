@@ -147,7 +147,7 @@ export class HtmlDrawer implements Drawer {
 
   drawShapeNode(node: ShapeNode): string {
     let styles = this.getNodeBasicStyle(node)
-    let html = `<svg style="${styles}">`
+    let html = `<svg class="drawing" style="${styles}">`
 
     switch (node.shapeType) {
       case "accentBorderCallout1":
@@ -308,8 +308,8 @@ export class HtmlDrawer implements Drawer {
         `<rect 
           x=0 y=0 
           width=${node.ShapeWidth} height=${node.ShapeHeight} 
-          fill="${node.bgColor}"
-          stroke="${node.border!.color}"
+          fill="none"
+          stroke="none"
           stroke-width="${node.border!.width}" 
           stroke-dasharray="${node.border!.strokeDasharray}"
           />`
@@ -319,8 +319,8 @@ export class HtmlDrawer implements Drawer {
         `<ellipse 
           cx="${node.ShapeWidth! / 2} cy="${node.ShapeHeight! / 2}" 
           rx="${node.ShapeWidth! / 2} cy="${node.ShapeHeight! / 2}"
-          fill="${node.bgColor}"
-          stroke="${node.border!.color}"
+          fill="none"
+          stroke="none"
           stroke-width="${node.border!.width}" 
           stroke-dasharray="${node.border!.strokeDasharray}"
         `
@@ -331,8 +331,8 @@ export class HtmlDrawer implements Drawer {
           x=0 y=0 
           width=${node.ShapeWidth} height=${node.ShapeHeight} 
           rx="7" ry="7"
-          fill="${node.bgColor}"
-          stroke="${node.border!.color}"
+          fill="none"
+          stroke="none"
           stroke-width="${node.border!.width}" 
           stroke-dasharray="${node.border!.strokeDasharray}"
           />`
@@ -349,7 +349,7 @@ export class HtmlDrawer implements Drawer {
         `
         <path
           d="${d}"
-          stroke="${node.border!.color}"
+          stroke="none"
           stroke-width="${node.border!.width}" 
           stroke-dasharray="${node.border!.strokeDasharray}"
           fill="none"
@@ -370,7 +370,7 @@ export class HtmlDrawer implements Drawer {
           `<line 
             x1="${node.ShapeWidth}" y1='0' 
             x2='0' y2="${node.ShapeHeight}"
-            stroke="${node.border!.color}"
+            stroke="none"
             stroke-width="${node.border!.width}" 
             stroke-dasharray="${node.border!.strokeDasharray}"
           />
@@ -380,7 +380,7 @@ export class HtmlDrawer implements Drawer {
           `<line 
             x1="0" y1="0" 
             x2="${node.ShapeWidth}" y2="${node.ShapeHeight}"
-            stroke="${node.border!.color}"
+            stroke="none"
             stroke-width="${node.border!.width}" 
             stroke-dasharray="${node.border!.strokeDasharray}"
           />
@@ -404,7 +404,7 @@ export class HtmlDrawer implements Drawer {
         <line 
           x1="0" y1="${node.ShapeHeight! / 2}" 
           x2="${node.ShapeWidth! - 15}" y2="${node.ShapeHeight! / 2}" 
-          stroke="${node.border!.color}"
+          stroke="none"
           stroke-width="${node.border!.width}" 
           stroke-dasharray="${node.border!.strokeDasharray}"
           marker-end='url(#markerTriangle)' />`
@@ -426,7 +426,7 @@ export class HtmlDrawer implements Drawer {
         <line 
           x1="${node.ShapeWidth! / 2}" y1="${node.ShapeHeight! / 2}" 
           x2="${node.ShapeWidth! / 2}" y2="${node.ShapeHeight! - 15}" 
-          stroke="${node.border!.color}"
+          stroke="none"
           stroke-width="${node.border!.width}" 
           stroke-dasharray="${node.border!.strokeDasharray}"
           marker-end='url(#markerTriangle)' />`
@@ -466,8 +466,12 @@ export class HtmlDrawer implements Drawer {
         console.warn("Undefine shape type.");
     }
 
-    
     html += `</svg>`
+
+    if (node.textNode) {
+      html += this.drawTextNode(node.textNode)
+    }
+    
     return html
   }
 
@@ -494,7 +498,7 @@ export class HtmlDrawer implements Drawer {
 
     let strStyles = styles.join("")
 
-    let html = `<div style="${strStyles}">`
+    let html = `<div class="block" style="${strStyles}">`
 
     if (node.content) {
       let content = this.drawSpanNode(node.content)
@@ -507,7 +511,7 @@ export class HtmlDrawer implements Drawer {
     }
 
     html += `</div>`
-    return ""
+    return html
   }
 
   drawSpanNode(node: SpanNode) {

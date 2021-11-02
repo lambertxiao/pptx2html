@@ -96,11 +96,13 @@ export default class PPTXConverter {
     let i = 0
     let svs: SlideView[] = []
     for (const slide of this.gprops?.slidePaths!) {
-      let processor = new SlideProcessor(
-        slide, i, this.provider!,  this.gprops!, this.globalCssStyles
-      )
-      svs.push(await processor.process())
-      break
+      if (i == 1) {
+        let processor = new SlideProcessor(
+          slide, i, this.provider!,  this.gprops!, this.globalCssStyles
+          )
+          svs.push(await processor.process())
+        }
+      i++
     }
 
     return svs
