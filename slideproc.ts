@@ -121,13 +121,17 @@ export default class SlideProcessor {
       
       if (slideLayoutNodes[nodeKey].constructor === Array) {
         for (let i = 0; i < slideLayoutNodes[nodeKey].length; i++) {
-          let item = await this.processSlideNode(nodeKey, slideLayoutNodes[nodeKey][i])
+          let node = slideLayoutNodes[nodeKey][i]
+          node["__location"] = "layout"
+          let item = await this.processSlideNode(nodeKey, node)
           if (item) {
             sv.addLayoutNode(item)
           }
         }
       } else {
-        let item = await this.processSlideNode(nodeKey, slideLayoutNodes[nodeKey])
+        let node = slideLayoutNodes[nodeKey]
+        node["__location"] = "layout"
+        let item = await this.processSlideNode(nodeKey, node)
         if (item) {
           sv.addLayoutNode(item)
         }
@@ -138,13 +142,17 @@ export default class SlideProcessor {
     for (let nodeKey in nodes) {
       if (nodes[nodeKey].constructor === Array) {
         for (let i = 0; i < nodes[nodeKey].length; i++) {
-          let item = await this.processSlideNode(nodeKey, nodes[nodeKey][i])
+          let node = nodes[nodeKey][i]
+          node["__location"] = "slide"
+          let item = await this.processSlideNode(nodeKey, node)
           if (item) {
             sv.addSlideNode(item)
           }
         }
       } else {
-        let item = await this.processSlideNode(nodeKey, nodes[nodeKey])
+        let node = nodes[nodeKey]
+        node["__location"] = "slide"
+        let item = await this.processSlideNode(nodeKey, node)
         if (item) {
           sv.addSlideNode(item)
         }

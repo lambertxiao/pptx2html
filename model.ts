@@ -29,12 +29,16 @@ export class SingleSlide {
   bgColor?: string
   gprops?: GlobalProps
 
-  getTargetResByID(rid: string) {
+  getTargetFromSlide(rid: string) {
     if (this.resContent[rid]) {
       return this.resContent[rid]["target"];
     }
 
-    let lrss = this.layoutResContent["Relationships"]["Relationship"]
+    return ""
+  }
+
+  getTargetFromLayout(rid: string): string {
+   let lrss = this.layoutResContent["Relationships"]["Relationship"]
     for (const rs of lrss) {
       if (rs["attrs"]["Id"] == rid) {
         return rs["attrs"]["Target"].replace("../", "ppt/");

@@ -63,7 +63,10 @@ export class HtmlDrawer implements Drawer {
       let section = `<section style="${style.toString()}">`
 
       let nodes: NodeElement[] = [...sv.layoutNodes, ...sv.slideNodes]
+
+      // console.log(JSON.stringify(nodes))
       for (const ln of nodes) {
+        console.log(ln.eleType)
         switch (ln.eleType) {
           case "text":
             let textNode = <TextNode>ln

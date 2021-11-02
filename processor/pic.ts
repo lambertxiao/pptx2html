@@ -6,9 +6,17 @@ export default class PicProcessor extends NodeProcessor {
 
   async genHTML() {
     let node = this.node
+    console.log(node)
     let order = node["attrs"]["order"];
     let rid = node["p:blipFill"]["a:blip"]["attrs"]["r:embed"];
-    let imgName = this.slide.getTargetResByID(rid)
+    let imgName = ""
+
+    if (node["__location"] == "layout") {
+      imgName = this.slide.getTargetFromLayout(rid)
+    } else if (node["__location"] == "slide") {
+      imgName = this.slide.getTargetFromSlide(rid)
+    }
+
     let imgFileExt = extractFileExtension(imgName).toLowerCase();
     let imgArrayBuffer = await this.provider.loadArrayBuffer(imgName)
     let mimeType = "";
