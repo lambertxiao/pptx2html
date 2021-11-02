@@ -1,5 +1,5 @@
 import PPTXProvider from '../provider';
-import { NodeElement, SingleSlide, SpanNode, TextNode } from '../model';
+import { NodeElement, ParagraphNode, SingleSlide, SpanNode, TextNode } from '../model';
 import { computePixel, extractTextByPath } from '../util';
 
 export default abstract class NodeProcessor {
@@ -115,30 +115,32 @@ export default abstract class NodeProcessor {
       return undefined;
     }
 
-    let textNode: TextNode = {
-      eleType: "text",
-      spanList: []
-    }
+    let textNode = new TextNode()
+    textNode.eleType = "text"
     
     if (textBodyNode["a:p"].constructor === Array) {
       // 多个文本段
       for (let i = 0; i < textBodyNode["a:p"].length; i++) {
+        let ph = new ParagraphNode()
         let pNode = textBodyNode["a:p"][i];
         let rNode = pNode["a:r"];
         textNode.styleClass = this.getHorizontalAlign(pNode, type) 
         textNode.content = this.genBuChar(pNode)
         
-        if (rNode === undefined) {
-          textNode.spanList!.push(this.genSpanElement(pNode, type))
+        if (!rNode) {
+          ph.spans.push(this.genSpanElement(pNode, type))
         } else if (rNode.constructor === Array) {
           for (let j = 0; j < rNode.length; j++) {
-            textNode.spanList!.push(this.genSpanElement(rNode[j], type))
+            ph.spans.push(this.genSpanElement(rNode[j], type))
           }
         } else {
-          textNode.spanList!.push(this.genSpanElement(rNode, type))
+          ph.spans.push(this.genSpanElement(rNode, type))
         }
+
+        textNode.paragraphNodes.push(ph)
       }
     } else {
+      let ph = new ParagraphNode()
       // 单个文本段
       let pNode = textBodyNode["a:p"]
       let rNode = pNode["a:r"]
@@ -151,14 +153,16 @@ export default abstract class NodeProcessor {
       }
 
       if (!rNode) {
-        textNode.spanList!.push(this.genSpanElement(pNode, type))
+        ph.spans.push(this.genSpanElement(pNode, type))
       } else if (rNode.constructor === Array) {
         for (let j = 0; j < rNode.length; j++) {
-          textNode.spanList!.push(this.genSpanElement(rNode[j], type))
+          ph.spans.push(this.genSpanElement(rNode[j], type))
         }
       } else {
-        textNode.spanList!.push(this.genSpanElement(rNode, type))
+        ph.spans.push(this.genSpanElement(rNode, type))
       }
+
+      textNode.paragraphNodes.push(ph)
     }
 
     return textNode;
@@ -240,7 +244,7 @@ export default abstract class NodeProcessor {
 
   getFontColor(node: any) {
     let color = this.getTextByPathStr(node, "a:rPr a:solidFill a:srgbClr attrs val");
-    return (color === undefined) ? "#000" : "#" + color;
+    return (color === undefined) ? "" : "#" + color;
   }
 
   getFontSize(node: any, slideLayoutSpNode: any, type: any, slideMasterTextStyles: any) {

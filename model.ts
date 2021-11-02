@@ -110,7 +110,11 @@ export class TextNode extends NodeElement {
   fontFamily?: string
   content?: SpanNode | null
   styleClass?: string
-  spanList?: SpanNode[]
+  paragraphNodes: ParagraphNode[] = []
+}
+
+export class ParagraphNode {
+  spans: SpanNode[] = []
 }
 
 export class SpanNode {
