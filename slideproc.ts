@@ -1,5 +1,5 @@
 import PPTXProvider from './provider';
-import { CssStyle, GlobalProps, NodeElement, SingleSlide } from './model';
+import { GlobalProps, NodeElement, SingleSlide, SlideView } from './model';
 import { extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
 import PicProcessor from './processor/pic';
 import ShapeTextProcessor from './processor/shapetext';
@@ -27,7 +27,7 @@ export default class SlideProcessor {
 
   async process() {
     await this.prepare()
-    return await this.genHtml()
+    return await this.genSlideView()
   }
 
   async prepare() {
@@ -95,26 +95,23 @@ export default class SlideProcessor {
     return ""
   }
 
-  async genHtml() {
-    let { slideWidth, slideHeight } = this.gprops
-    let { bgColor } = this.slide!
+  async genSlideView() {
+    let sv = new SlideView()
     
-    let styleName = `section-${this.index}`
-    let style = new CssStyle(styleName)
+    let { slideWidth, slideHeight } = this.gprops
+    sv.width = slideWidth
+    sv.height = slideHeight
 
+    let { bgColor } = this.slide!
+    sv.bgColor = bgColor
+    
     if (this.layoutBg) {
-      style.addBGBase64Img(this.layoutBg)
+      sv.bgImgData = this.layoutBg
     } else if (this.masterBg) {
-      style.addBGBase64Img(this.masterBg)
+      sv.bgImgData = this.masterBg
     }
 
-    style.addWidth(slideWidth!)
-    style.addHeight(slideHeight!)
-    style.add("background-color", "#" + bgColor!)
-    style.add("background-size", "cover")
-    this.gprops.addStyle(styleName, style)
-
-    let result = `<section class="${styleName}">`
+    sv.bgColor = bgColor
     
     let slideLayoutNodes = this.slideLayoutNodes
     for (const nodeKey in slideLayoutNodes) {
@@ -125,11 +122,15 @@ export default class SlideProcessor {
       if (slideLayoutNodes[nodeKey].constructor === Array) {
         for (let i = 0; i < slideLayoutNodes[nodeKey].length; i++) {
           let item = await this.processSlideNode(nodeKey, slideLayoutNodes[nodeKey][i])
-          result += item
+          if (item) {
+            sv.addLayoutNode(item)
+          }
         }
       } else {
         let item = await this.processSlideNode(nodeKey, slideLayoutNodes[nodeKey])
-        result += item
+        if (item) {
+          sv.addLayoutNode(item)
+        }
       }
     }
 
@@ -138,15 +139,19 @@ export default class SlideProcessor {
       if (nodes[nodeKey].constructor === Array) {
         for (let i = 0; i < nodes[nodeKey].length; i++) {
           let item = await this.processSlideNode(nodeKey, nodes[nodeKey][i])
-          result += item
+          if (item) {
+            sv.addSlideNode(item)
+          }
         }
       } else {
         let item = await this.processSlideNode(nodeKey, nodes[nodeKey])
-        result += item
+        if (item) {
+          sv.addSlideNode(item)
+        }
       }
     }
 
-    return result + "</section>";
+    return sv;
   }
 
   async getSlideRes(slidePath: string) {

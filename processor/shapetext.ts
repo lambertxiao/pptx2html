@@ -68,7 +68,6 @@ export default class ShapeTextProcessor extends NodeProcessor {
     let slideLayoutXfrmNode = extractTextByPath(this.slideLayoutSpNode, xfrmList);
     let slideMasterXfrmNode = extractTextByPath(this.slideMasterSpNode, xfrmList);
 
-    let result = "";
     let shapeType = extractTextByPath(this.node, ["p:spPr", "a:prstGeom", "attrs", "prst"]);
 
     let isFlipV = false;
@@ -79,6 +78,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
     let shapeNode: ShapeNode = {
       eleType: "shape",
       shapeType: shapeType,
+      isFlipV: isFlipV,
     }
     
     if (shapeType) {
@@ -397,15 +397,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
       //   "'>";
 
       // TextBody
-      if (node["p:txBody"]) {
-        result += this.genTextBody(node["p:txBody"], this.type);
-      }
-
-      let textNode: TextNode = {
-        eleType: "text",
-        textType: this.type!,
-      }
-
+      let textNode = this.genTextBody(node["p:txBody"], this.type);
       let sn: ShapeNode = {
         eleType: "shape",
         top: top,

@@ -59,10 +59,5 @@ export default class PicProcessor extends NodeProcessor {
     }
 
     return pn
-    // return `
-    //   <div class="block content" z-index: ${order}; style="${position} ${size}">
-    //     <img src="${img}" style="width: 100%; height: 100%; ${imgBorderRadius}"/>
-    //   </div>
-    // `
   }
 }

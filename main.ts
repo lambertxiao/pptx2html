@@ -1,8 +1,8 @@
 import PPTXConverter from "./converter";
-import PPTXProvider from "./provider";
 import { program } from "commander"
 import path from "node:path";
 import { HtmlDrawer } from "./drawer";
+import fs from "fs"
 
 async function main() {
   program
@@ -14,10 +14,16 @@ async function main() {
   let srcFile = path.resolve(options.src)
   let outDir = path.resolve(options.outdir)
 
+  let converter = new PPTXConverter(srcFile)
+  let slideViews = await converter.convert()
+  
+  let templateHtml = path.resolve("./web/pptx.html")
+  let templateCss = path.resolve("./web/pptx.css")
+  let drawer = new HtmlDrawer(templateHtml, templateCss)
+  let html = drawer.draw(slideViews)
 
-  let drawer = new HtmlDrawer()
-  let converter = new PPTXConverter(srcFile, outDir, drawer)
-  await converter.run()
+  let outFile = outDir + "/" +path.basename(srcFile).split(".")[0] + ".html"
+  fs.writeFileSync(outFile, html)
 }
 
 main()

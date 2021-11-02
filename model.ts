@@ -7,12 +7,6 @@ export class GlobalProps {
   slideLayouts?: any[]
   thumbnail?: string
   theme?: ThemeContent
-
-  globalStyles: { [key: string]: CssStyle } = {}
-
-  addStyle(name: string, val: CssStyle) {
-    this.globalStyles[name] = val
-  }
 }
 
 export class SingleSlide {
@@ -53,39 +47,6 @@ export class SingleSlide {
   queryLayoutIndex() { }
 }
 
-export class CssStyle {
-
-  content: { [key: string]: string } = {}
-
-  constructor(private readonly name: string) {
-    this.name = name
-  }
-
-  add(key: string, val: string) {
-    this.content[key] = val
-  }
-
-  addWidth(val: number) {
-    this.add("width", val + "px")
-  }
-
-  addHeight(val: number) {
-    this.add("height", val + "px")
-  }
-
-  addBGBase64Img(val: string) {
-    this.add("background-image", `url(data:image/png;base64,${val})`)
-  }
-
-  toString() {
-    let s = ""
-    for (const key in this.content) {
-      s += `${key}: ${this.content[key]};`
-    }
-
-    return `.${this.name} {${s}}`
-  }
-}
 
 export class ThemeContent {
 
@@ -138,6 +99,7 @@ export class ShapeNode extends NodeElement {
   border?: Border
   ShapeWidth?: number
   ShapeHeight?: number
+  isFlipV?: boolean
 }
 
 export class TextNode extends NodeElement {
@@ -160,7 +122,7 @@ export class SpanNode {
   fontStyle?: string
   textDecoration?: string
   verticalAlign?: string
-  content: any
+  content?: string
   color?: string
   // 有超链接
   linkID?: string
@@ -187,4 +149,21 @@ export class ChartNode extends NodeElement {
 
 export class DiagramNode extends NodeElement {
   eleType = "diagram"
+}
+
+export class SlideView {
+  width?: number
+  height?: number
+  bgColor?: string
+  bgImgData?: string
+  layoutNodes: NodeElement[] = []
+  slideNodes: NodeElement[] = []
+
+  addLayoutNode(node: NodeElement) {
+    this.layoutNodes.push(node)
+  }
+
+  addSlideNode(node: NodeElement) {
+    this.slideNodes.push(node)
+  }
 }
