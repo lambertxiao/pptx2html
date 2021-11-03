@@ -55,7 +55,7 @@ export function img2Base64(data: any) {
 }
 
 export function computePixel(emus: string): number {
-	return parseInt(emus) * 96 / 914400
+	return Math.round(parseInt(emus) * 96 / 914400)
 }
 
 export function extractFileExtension(filename: string) {

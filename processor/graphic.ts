@@ -26,15 +26,17 @@ export default class GraphicProcessor extends NodeProcessor {
     let order = node["attrs"]["order"];
     let _tableNode = extractTextByPath(node, ["a:graphic", "a:graphicData", "a:tbl"]);
     let xfrmNode = extractTextByPath(node, ["p:xfrm"]);
-
+    let { width, height } = this.getSize(xfrmNode, undefined, undefined)
     let { top, left } = this.getPosition(xfrmNode, undefined, undefined)
     let tableNode = new TableNode()
     tableNode.top = top
     tableNode.left = left
+    tableNode.width = width
+    tableNode.height = height
     tableNode.zindex = order
 
     let trNodes = _tableNode["a:tr"];
-    
+
     if (trNodes.constructor === Array) {
       for (let i = 0; i < trNodes.length; i++) {
         let row = new TableRow()
@@ -42,12 +44,13 @@ export default class GraphicProcessor extends NodeProcessor {
 
         if (tcNodes.constructor === Array) {
           for (let j = 0; j < tcNodes.length; j++) {
+            console.log(tcNodes[j]["a:txBody"])
             let text = this.genTextBody(tcNodes[j]["a:txBody"], "");
             let rowSpan = extractTextByPath(tcNodes[j], ["attrs", "rowSpan"]);
             let colSpan = extractTextByPath(tcNodes[j], ["attrs", "gridSpan"]);
             let vMerge = extractTextByPath(tcNodes[j], ["attrs", "vMerge"]);
             let hMerge = extractTextByPath(tcNodes[j], ["attrs", "hMerge"]);
-            
+
             let col = new TableCol()
             col.rowSpan = rowSpan
             col.colSpan = colSpan
@@ -60,6 +63,8 @@ export default class GraphicProcessor extends NodeProcessor {
           col.text = this.genTextBody(tcNodes["a:txBody"], "")
           row.cols.push(col)
         }
+
+        tableNode.rows.push(row)
       }
     } else {
       let row = new TableRow()
@@ -80,6 +85,8 @@ export default class GraphicProcessor extends NodeProcessor {
 
       tableNode.rows.push(row);
     }
+
+    console.log(tableNode)
 
     return tableNode;
   }

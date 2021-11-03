@@ -30,18 +30,19 @@ export class CssStyle {
   }
 
   toString() {
-    let s = ""
+    let s = `.${this.name} {`
     for (const key in this.content) {
       s += `${key}: ${this.content[key]};`
     }
 
+    s += "}"
     return s
   }
 }
 
 export class HtmlDrawer implements Drawer {
 
-  cssStyles: any = {}
+  cssStyles: CssStyle[] = []
 
   constructor(
     private readonly templateHtml: string,
@@ -65,8 +66,8 @@ export class HtmlDrawer implements Drawer {
         style.add("background-color", sv.bgColor!)
       }
 
-      let section = `<section style="${style.toString()}">`
-
+      this.cssStyles.push(style)
+      let section = `<section class="${styleName}">`
       let nodes: NodeElement[] = [...sv.layoutNodes, ...sv.slideNodes]
 
       for (const ln of nodes) {
@@ -598,13 +599,22 @@ export class HtmlDrawer implements Drawer {
     return c
   }
 
+  genGlobalCSS() {
+    let css = ""
+    for (const style of this.cssStyles) {
+      css += style.toString() + "\n"
+    }
+
+    return css
+  }
+
   mixContent(slidesContent: string) {
     let template = fs.readFileSync(this.templateHtml).toString()
     let cssContent = fs.readFileSync(this.templateCss).toString()
 
-    // let globalCss = this.genGlobalCSS()
+    let globalCss = this.genGlobalCSS()
     let content = template.replace("{{content}}", slidesContent)
-    content = content.replace("{{style}}", cssContent)
+    content = content.replace("{{style}}", cssContent + globalCss)
     // content = content.replace("{{width}}", this.gprops!.slideWidth + "")
 
     return content

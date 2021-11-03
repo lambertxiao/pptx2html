@@ -30,8 +30,6 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
       this.order = node["attrs"]["order"];
 
-      printObj(slide)
-      console.log(type)
       if (type) {
         this.slideLayoutSpNode = this.slide.layoutIndexTables!["typeTable"][type];
         this.slideMasterSpNode = this.slide.masterIndexTable!["typeTable"][type];
@@ -60,9 +58,6 @@ export default class ShapeTextProcessor extends NodeProcessor {
     let slideXfrmNode = extractTextByPath(this.node, xfrmList);
     let slideLayoutXfrmNode = extractTextByPath(this.slideLayoutSpNode, xfrmList);
     let slideMasterXfrmNode = extractTextByPath(this.slideMasterSpNode, xfrmList);
-
-    console.log(node, slideMasterXfrmNode, slideMasterXfrmNode)
-
     let shapeType = extractTextByPath(this.node, ["p:spPr", "a:prstGeom", "attrs", "prst"]);
 
     let isFlipV = false;
