@@ -1,23 +1,20 @@
 import PPTXProvider from '../provider';
 import { NodeElement, ParagraphNode, SingleSlide, SpanNode, TextNode } from '../model';
-import { computePixel, extractTextByPath } from '../util';
+import { computePixel, extractTextByPath, printObj } from '../util';
 
 export default abstract class NodeProcessor {
   provider: PPTXProvider
   slide: SingleSlide
   node: any
-  globalCssStyles: any
 
   constructor(
     provider: PPTXProvider,
     slide: SingleSlide,
     node: any,
-    globalCssStyles: any
   ) {
     this.provider = provider
     this.slide = slide
     this.node = node
-    this.globalCssStyles = globalCssStyles
   }
 
   abstract genHTML(): Promise<NodeElement | null>
@@ -117,16 +114,16 @@ export default abstract class NodeProcessor {
 
     let textNode = new TextNode()
     textNode.eleType = "text"
-    
+
     if (textBodyNode["a:p"].constructor === Array) {
       // 多个文本段
       for (let i = 0; i < textBodyNode["a:p"].length; i++) {
         let ph = new ParagraphNode()
         let pNode = textBodyNode["a:p"][i];
         let rNode = pNode["a:r"];
-        textNode.styleClass = this.getHorizontalAlign(pNode, type) 
+        textNode.styleClass = this.getHorizontalAlign(pNode, type)
         textNode.content = this.genBuChar(pNode)
-        
+
         if (!rNode) {
           ph.spans.push(this.genSpanElement(pNode, type))
         } else if (rNode.constructor === Array) {
@@ -145,7 +142,7 @@ export default abstract class NodeProcessor {
       let pNode = textBodyNode["a:p"]
       let rNode = pNode["a:r"]
       let styleClass = this.getHorizontalAlign(pNode, type)
-      
+
       textNode.styleClass = styleClass
       let content = this.genBuChar(pNode)
       if (content) {
@@ -217,7 +214,7 @@ export default abstract class NodeProcessor {
       linkID: extractTextByPath(node, ["a:rPr", "a:hlinkClick", "attrs", "r:id"]),
       content: text,
     }
-    
+
     return sn
   }
 

@@ -6,7 +6,6 @@ export default class PicProcessor extends NodeProcessor {
 
   async genHTML() {
     let node = this.node
-    console.log(node)
     let order = node["attrs"]["order"];
     let rid = node["p:blipFill"]["a:blip"]["attrs"]["r:embed"];
     let imgName = ""
@@ -39,6 +38,9 @@ export default class PicProcessor extends NodeProcessor {
         break;
       case "wmf": // Not native support
         mimeType = "image/x-wmf";
+        break;
+      case "tiff":
+        mimeType = "image/tiff";
         break;
       default:
         mimeType = "image/*";

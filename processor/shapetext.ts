@@ -1,6 +1,6 @@
 import PPTXProvider from '../provider';
-import { Border, ShapeNode, SingleSlide, TextNode } from '../model';
-import { computePixel, extractTextByPath } from '../util';
+import { Border, ShapeNode, SingleSlide } from '../model';
+import { computePixel, extractTextByPath, printObj } from '../util';
 import NodeProcessor from './processor';
 const colz = require('colz');
 
@@ -13,17 +13,15 @@ export default class ShapeTextProcessor extends NodeProcessor {
   idx?: string
   type?: string
   order: string
-  globalCssStype: any
 
-  constructor(provider: PPTXProvider, slide: SingleSlide, node: any, globalCssStype: any, withConnection: boolean) {
-    super(provider, slide, node, globalCssStype)
+  constructor(provider: PPTXProvider, slide: SingleSlide, node: any, withConnection: boolean) {
+    super(provider, slide, node)
 
     if (withConnection) {
       this.id = node["p:nvCxnSpPr"]["p:cNvPr"]["attrs"]["id"];
       this.name = node["p:nvCxnSpPr"]["p:cNvPr"]["attrs"]["name"];
       this.order = node["attrs"]["order"];
     } else {
-      this.globalCssStype = globalCssStype
       this.id = node["p:nvSpPr"]["p:cNvPr"]["attrs"]["id"];
       this.name = node["p:nvSpPr"]["p:cNvPr"]["attrs"]["name"];
 
@@ -31,28 +29,23 @@ export default class ShapeTextProcessor extends NodeProcessor {
       let type = (node["p:nvSpPr"]["p:nvPr"]["p:ph"] === undefined) ? undefined : node["p:nvSpPr"]["p:nvPr"]["p:ph"]["attrs"]["type"];
 
       this.order = node["attrs"]["order"];
-      let slideLayoutSpNode = undefined;
-      let slideMasterSpNode = undefined;
 
-      if (type !== undefined) {
-        if (idx !== undefined) {
-          slideLayoutSpNode = this.slide.layoutIndexTables!["typeTable"][type];
-          slideMasterSpNode = this.slide.masterIndexTable!["typeTable"][type];
-        } else {
-          slideLayoutSpNode = this.slide.layoutIndexTables!["typeTable"][type];
-          slideMasterSpNode = this.slide.masterIndexTable!["typeTable"][type];
-        }
+      printObj(slide)
+      console.log(type)
+      if (type) {
+        this.slideLayoutSpNode = this.slide.layoutIndexTables!["typeTable"][type];
+        this.slideMasterSpNode = this.slide.masterIndexTable!["typeTable"][type];
       } else {
-        if (idx !== undefined) {
-          slideLayoutSpNode = this.slide.layoutIndexTables!["idxTable"][idx];
-          slideMasterSpNode = this.slide.masterIndexTable!["idxTable"][idx];
+        if (idx) {
+          this.slideLayoutSpNode = this.slide.layoutIndexTables!["idxTable"][idx];
+          this.slideMasterSpNode = this.slide.masterIndexTable!["idxTable"][idx];
         }
       }
 
       if (type === undefined) {
-        type = extractTextByPath(slideLayoutSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
+        type = extractTextByPath(this.slideLayoutSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
         if (type === undefined) {
-          type = extractTextByPath(slideMasterSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
+          type = extractTextByPath(this.slideMasterSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
         }
       }
 
@@ -68,6 +61,8 @@ export default class ShapeTextProcessor extends NodeProcessor {
     let slideLayoutXfrmNode = extractTextByPath(this.slideLayoutSpNode, xfrmList);
     let slideMasterXfrmNode = extractTextByPath(this.slideMasterSpNode, xfrmList);
 
+    console.log(node, slideMasterXfrmNode, slideMasterXfrmNode)
+
     let shapeType = extractTextByPath(this.node, ["p:spPr", "a:prstGeom", "attrs", "prst"]);
 
     let isFlipV = false;
@@ -80,13 +75,13 @@ export default class ShapeTextProcessor extends NodeProcessor {
       shapeType: shapeType,
       isFlipV: isFlipV,
     }
-    
+
     if (shapeType) {
       let ext = extractTextByPath(slideXfrmNode, ["a:ext", "attrs"]);
       let w = computePixel(ext["cx"])
       let h = computePixel(ext["cy"])
-      let { top, left } = this.getPosition(slideXfrmNode, undefined, undefined)
-      let { width, height } = this.getSize(slideXfrmNode, undefined, undefined)
+      let { top, left } = this.getPosition(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode)
+      let { width, height } = this.getSize(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode)
 
       shapeNode.width = width
       shapeNode.height = height
@@ -95,12 +90,12 @@ export default class ShapeTextProcessor extends NodeProcessor {
       shapeNode.zindex = this.order
       shapeNode.ShapeWidth = w
       shapeNode.ShapeHeight = h
-      
+
       // Fill Color
       let fillColor = this.getShapeFill()
       shapeNode.bgColor = fillColor
 
-      // Border Color        
+      // Border Color
       let border = this.getBorder()
       shapeNode.border = border
 
@@ -112,8 +107,8 @@ export default class ShapeTextProcessor extends NodeProcessor {
           let tPosition = this.getPosition(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode)
           textNode.top = tPosition["top"]
           textNode.left = tPosition["left"]
-          
-          let tSize = this.getSize(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode) 
+
+          let tSize = this.getSize(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode)
           textNode.width = tSize["width"]
           textNode.height = tSize["height"]
           textNode.zindex = this.order
@@ -124,7 +119,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
       return shapeNode
     } else {
-      let { top, left } = this.getPosition(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode) 
+      let { top, left } = this.getPosition(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode)
       let { width, height } = this.getSize(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode)
       let border = this.getBorder()
       let bgColor = this.getShapeFill()

@@ -47,10 +47,7 @@ export class SingleSlide {
 
     return ""
   }
-
-  queryLayoutIndex() { }
 }
-
 
 export class ThemeContent {
 
@@ -157,6 +154,11 @@ export class ChartNode extends NodeElement {
 
 export class DiagramNode extends NodeElement {
   eleType = "diagram"
+}
+
+export class NodeElementGroup extends NodeElement {
+  eleType = "nodeGroup"
+  nodes: NodeElement[] = []
 }
 
 export class SlideView {

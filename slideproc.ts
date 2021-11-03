@@ -1,5 +1,5 @@
 import PPTXProvider from './provider';
-import { GlobalProps, NodeElement, SingleSlide, SlideView } from './model';
+import { GlobalProps, NodeElement, NodeElementGroup, SingleSlide, SlideView } from './model';
 import { extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
 import PicProcessor from './processor/pic';
 import ShapeTextProcessor from './processor/shapetext';
@@ -20,7 +20,6 @@ export default class SlideProcessor {
     private readonly index: number,
     private readonly provider: PPTXProvider,
     gprops: GlobalProps,
-    private readonly globalCssStyles: any,
   ) {
     this.gprops = gprops
   }
@@ -48,7 +47,7 @@ export default class SlideProcessor {
     slide.masterIndexTable = this.indexNodes(slide.masterContent)
     slide.masterTextStyles = extractTextByPath(slide.masterContent, ["p:sldMaster", "p:txStyles"]);
     slide.masterResContent = await this.getMasterRes(masterFilePath)
-    
+
     let layoutBgPath = this.loadLayoutBg()
     let masterBgPath = this.loadMasterBg()
 
@@ -70,7 +69,7 @@ export default class SlideProcessor {
     if (!resId) {
       resId = extractTextByPath(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
     }
-    
+
     let relationships = this.slide!.layoutResContent["Relationships"]["Relationship"]
 
     for (const relationship of relationships) {
@@ -81,7 +80,7 @@ export default class SlideProcessor {
 
     return ""
   }
-  
+
   loadMasterBg() {
     let resId = extractTextByPath(this.slide!.masterContent, ["p:sldMaster", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
     let relationships = this.slide!.masterResContent["Relationships"]["Relationship"]
@@ -97,14 +96,14 @@ export default class SlideProcessor {
 
   async genSlideView() {
     let sv = new SlideView()
-    
+
     let { slideWidth, slideHeight } = this.gprops
     sv.width = slideWidth
     sv.height = slideHeight
 
     let { bgColor } = this.slide!
     sv.bgColor = bgColor
-    
+
     if (this.layoutBg) {
       sv.bgImgData = this.layoutBg
     } else if (this.masterBg) {
@@ -112,13 +111,13 @@ export default class SlideProcessor {
     }
 
     sv.bgColor = bgColor
-    
+
     let slideLayoutNodes = this.slideLayoutNodes
     for (const nodeKey in slideLayoutNodes) {
       if (nodeKey != "p:pic") {
         continue
       }
-      
+
       if (slideLayoutNodes[nodeKey].constructor === Array) {
         for (let i = 0; i < slideLayoutNodes[nodeKey].length; i++) {
           let node = slideLayoutNodes[nodeKey][i]
@@ -241,7 +240,7 @@ export default class SlideProcessor {
       if (bgColor === undefined) {
         bgColor = this.getSolidFill(extractTextByPath(masterContent, ["p:sldMaster", "p:cSld", "p:bg", "p:bgPr", "a:solidFill"]));
         if (bgColor === undefined) {
-          bgColor = "FFF";
+          bgColor = "#FFF";
         }
       }
     }
@@ -321,24 +320,29 @@ export default class SlideProcessor {
     return { "idTable": idTable, "idxTable": idxTable, "typeTable": typeTable };
   }
 
-  async processSlideNode(nodeType: string, nodeVal: any): Promise<NodeElement | null> {
-    let node: NodeElement | null = null
+  async processSlideNode(nodeType: string, nodeVal: any): Promise<NodeElement | NodeElementGroup | null> {
+    let node: NodeElement | NodeElementGroup | null = null
     switch (nodeType) {
-      case "p:sp":    // Shape, Text
+      // Shape, Text
+      case "p:sp":
         node = await this.processShapeAndTextNode(nodeVal);
-        break;
-      case "p:cxnSp":    // Shape, Text (with connection)
+        break
+      // Shape, Text (with connection)
+      case "p:cxnSp":
         node = await this.processCxnSpNode(nodeVal);
-        break;
-      case "p:pic":    // Picture
+        break
+      // Picture
+      case "p:pic":
         node = await this.processPicNode(nodeVal);
-        break;
-      case "p:graphicFrame":    // Chart, Diagram, Table
+        break
+      case "p:graphicFrame":
+        // Chart, Diagram, Table
         node = await this.processGraphicFrameNode(nodeVal);
         break;
-      // case "p:grpSp":    // 群組
-      //   node = await this.processGroupSpNode(nodeVal);
-      //   break;
+      case "p:grpSp":    // 群組
+        console.log("parse 群组")
+        node = await this.processGroupSpNode(nodeVal);
+        break;
       default:
         break
     }
@@ -347,29 +351,30 @@ export default class SlideProcessor {
   }
 
   async processShapeAndTextNode(nodeVal: any) {
-    let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles, false)
+    let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, false)
     let html = await sp.genHTML()
     return html
   }
 
   async processCxnSpNode(nodeVal: any) {
-    let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles, true)
+    let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, true)
     return await sp.genHTML()
   }
 
   async processPicNode(nodeVal: any) {
-    let picNode = new PicProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles)
+    let picNode = new PicProcessor(this.provider, this.slide!, nodeVal)
     return await picNode.genHTML()
   }
 
   async processGraphicFrameNode(nodeVal: any) {
-    let n = new GraphicProcessor(this.provider, this.slide!, nodeVal, this.globalCssStyles)
+    let n = new GraphicProcessor(this.provider, this.slide!, nodeVal)
     return await n.genHTML()
   }
 
   async processGroupSpNode(node: any) {
+    let group = new NodeElementGroup()
     let factor = 96 / 914400;
-    
+
     let xfrmNode = node["p:grpSpPr"]["a:xfrm"];
     let x = parseInt(xfrmNode["a:off"]["attrs"]["x"]) * factor;
     let y = parseInt(xfrmNode["a:off"]["attrs"]["y"]) * factor;
@@ -380,20 +385,30 @@ export default class SlideProcessor {
     let chcx = parseInt(xfrmNode["a:chExt"]["attrs"]["cx"]) * factor;
     let chcy = parseInt(xfrmNode["a:chExt"]["attrs"]["cy"]) * factor;
     let order = node["attrs"]["order"];
-    let result = "<div class='block group' style='z-index: " + order + "; top: " + (y - chy) + "px; left: " + (x - chx) + "px; width: " + (cx - chcx) + "px; height: " + (cy - chcy) + "px;'>";
-    
+
+    group.zindex = order
+    group.top = y - chy
+    group.left = x - chx
+    group.width = cx - chcx
+    group.height = cy - chcy
+
     // Procsee all child nodes
     for (let nodeKey in node) {
         if (node[nodeKey].constructor === Array) {
             for (let i=0; i<node[nodeKey].length; i++) {
-                result += await this.processSlideNode(nodeKey, node[nodeKey][i]);
+              let n = await this.processSlideNode(nodeKey, node[nodeKey][i])
+              if (n) {
+                group.nodes.push(n)
+              }
             }
         } else {
-            result += await this.processSlideNode(nodeKey, node[nodeKey]);
+          let n = await this.processSlideNode(nodeKey, node[nodeKey])
+          if (n) {
+            group.nodes.push(n)
+          }
         }
     }
-    
-    result += "</div>";
-    return result;
+
+    return group
   }
 }

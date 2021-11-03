@@ -6,12 +6,10 @@ import { GlobalProps, SlideView, ThemeContent } from './model'
 export default class PPTXConverter {
   srcFilePath: string
   gprops: GlobalProps
-  globalCssStyles: any
   provider: PPTXProvider
 
   constructor(srcFilePath: string) {
     this.srcFilePath = srcFilePath
-    this.globalCssStyles = {}
     this.gprops = new GlobalProps()
     this.provider = new PPTXProvider(this.srcFilePath)
   }
@@ -27,7 +25,7 @@ export default class PPTXConverter {
 
     this.gprops.slidePaths = slidePaths
     this.gprops.slideLayouts = slideLayouts
-    this.gprops.theme = new ThemeContent(await this.loadTheme()) 
+    this.gprops.theme = new ThemeContent(await this.loadTheme())
 
     return await this.processSlides()
   }
@@ -96,12 +94,12 @@ export default class PPTXConverter {
     let i = 0
     let svs: SlideView[] = []
     for (const slide of this.gprops?.slidePaths!) {
-      if (i == 0) {
+      // if (i == 0) {
         let processor = new SlideProcessor(
-          slide, i, this.provider!,  this.gprops!, this.globalCssStyles
+          slide, i, this.provider!,  this.gprops!,
           )
           svs.push(await processor.process())
-        }
+        // }
       i++
     }
 

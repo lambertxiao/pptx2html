@@ -41,11 +41,16 @@ export class CssStyle {
 
 export class HtmlDrawer implements Drawer {
 
-  constructor(private readonly templateHtml: string, private readonly templateCss: string) { }
+  cssStyles: any = {}
+
+  constructor(
+    private readonly templateHtml: string,
+    private readonly templateCss: string,
+  ) { }
 
   draw(slideViews: SlideView[]): string {
     let html = ""
-    
+
     for (let i = 0; i < slideViews.length; i++) {
       let sv = slideViews[i]
       let styleName = "section-" + i
@@ -64,9 +69,7 @@ export class HtmlDrawer implements Drawer {
 
       let nodes: NodeElement[] = [...sv.layoutNodes, ...sv.slideNodes]
 
-      // console.log(JSON.stringify(nodes))
       for (const ln of nodes) {
-        console.log(ln.eleType)
         switch (ln.eleType) {
           case "text":
             let textNode = <TextNode>ln
@@ -323,36 +326,36 @@ export class HtmlDrawer implements Drawer {
       case "wedgeRectCallout":
       case "wedgeRoundRectCallout":
       case "rect":
-        html += 
-        `<rect 
-          x=0 y=0 
-          width=${node.ShapeWidth} height=${node.ShapeHeight} 
+        html +=
+        `<rect
+          x=0 y=0
+          width=${node.ShapeWidth} height=${node.ShapeHeight}
           fill="${fillColor}"
           stroke="${borderColor}"
-          stroke-width="${node.border!.width}" 
+          stroke-width="${node.border!.width}"
           stroke-dasharray="${node.border!.strokeDasharray}"
           />`
         break;
       case "ellipse":
-        html += 
-        `<ellipse 
-          cx="${node.ShapeWidth! / 2} cy="${node.ShapeHeight! / 2}" 
+        html +=
+        `<ellipse
+          cx="${node.ShapeWidth! / 2} cy="${node.ShapeHeight! / 2}"
           rx="${node.ShapeWidth! / 2} cy="${node.ShapeHeight! / 2}"
           fill="${fillColor}"
           stroke="${borderColor}"
-          stroke-width="${node.border!.width}" 
+          stroke-width="${node.border!.width}"
           stroke-dasharray="${node.border!.strokeDasharray}"
         `
         break;
       case "roundRect":
-        html += 
-        `<rect 
-          x=0 y=0 
-          width=${node.ShapeWidth} height=${node.ShapeHeight} 
+        html +=
+        `<rect
+          x=0 y=0
+          width=${node.ShapeWidth} height=${node.ShapeHeight}
           rx="7" ry="7"
           fill="${fillColor}"
           stroke="${borderColor}"
-          stroke-width="${node.border!.width}" 
+          stroke-width="${node.border!.width}"
           stroke-dasharray="${node.border!.strokeDasharray}"
           />`
         break;
@@ -364,12 +367,12 @@ export class HtmlDrawer implements Drawer {
           d = "M " + node.ShapeWidth + " 0 L " + node.ShapeWidth + " " + node.ShapeHeight + " L 0 " + node.ShapeHeight;
         }
 
-        html += 
+        html +=
         `
         <path
           d="${d}"
           stroke="${borderColor}"
-          stroke-width="${node.border!.width}" 
+          stroke-width="${node.border!.width}"
           stroke-dasharray="${node.border!.strokeDasharray}"
           fill="${fillColor}"
         />
@@ -385,22 +388,22 @@ export class HtmlDrawer implements Drawer {
       case "curvedConnector4":
       case "curvedConnector5":
         if (node.isFlipV) {
-          html += 
-          `<line 
-            x1="${node.ShapeWidth}" y1='0' 
+          html +=
+          `<line
+            x1="${node.ShapeWidth}" y1='0'
             x2='0' y2="${node.ShapeHeight}"
             stroke="${borderColor}"
-            stroke-width="${node.border!.width}" 
+            stroke-width="${node.border!.width}"
             stroke-dasharray="${node.border!.strokeDasharray}"
           />
           `;
         } else {
-          html += 
-          `<line 
-            x1="0" y1="0" 
+          html +=
+          `<line
+            x1="0" y1="0"
             x2="${node.ShapeWidth}" y2="${node.ShapeHeight}"
             stroke="${borderColor}"
-            stroke-width="${node.border!.width}" 
+            stroke-width="${node.border!.width}"
             stroke-dasharray="${node.border!.strokeDasharray}"
           />
           `;
@@ -409,44 +412,44 @@ export class HtmlDrawer implements Drawer {
       case "rightArrow":
         html += `
         <defs>
-          <marker 
-            id="markerTriangle" 
-            viewBox="0 0 10 10" 
-            refX="1" refY="5" 
-            markerWidth="2.5" 
-            markerHeight="2.5" 
-            orient="auto-start-reverse" 
+          <marker
+            id="markerTriangle"
+            viewBox="0 0 10 10"
+            refX="1" refY="5"
+            markerWidth="2.5"
+            markerHeight="2.5"
+            orient="auto-start-reverse"
             markerUnits="strokeWidth">
             <path d="M 0 0 L 10 5 L 0 10 z"/>
           </marker>
         </defs>
-        <line 
-          x1="0" y1="${node.ShapeHeight! / 2}" 
-          x2="${node.ShapeWidth! - 15}" y2="${node.ShapeHeight! / 2}" 
+        <line
+          x1="0" y1="${node.ShapeHeight! / 2}"
+          x2="${node.ShapeWidth! - 15}" y2="${node.ShapeHeight! / 2}"
           stroke="${borderColor}"
-          stroke-width="${node.border!.width}" 
+          stroke-width="${node.border!.width}"
           stroke-dasharray="${node.border!.strokeDasharray}"
           marker-end='url(#markerTriangle)' />`
         break;
       case "downArrow":
         html += `
         <defs>
-          <marker 
-            id="markerTriangle" 
-            viewBox="0 0 10 10" 
-            refX="1" refY="5" 
-            markerWidth="2.5" 
-            markerHeight="2.5" 
-            orient="auto-start-reverse" 
+          <marker
+            id="markerTriangle"
+            viewBox="0 0 10 10"
+            refX="1" refY="5"
+            markerWidth="2.5"
+            markerHeight="2.5"
+            orient="auto-start-reverse"
             markerUnits="strokeWidth">
             <path d="M 0 0 L 10 5 L 0 10 z"/>
           </marker>
         </defs>
-        <line 
-          x1="${node.ShapeWidth! / 2}" y1="${node.ShapeHeight! / 2}" 
-          x2="${node.ShapeWidth! / 2}" y2="${node.ShapeHeight! - 15}" 
+        <line
+          x1="${node.ShapeWidth! / 2}" y1="${node.ShapeHeight! / 2}"
+          x2="${node.ShapeWidth! / 2}" y2="${node.ShapeHeight! - 15}"
           stroke="${borderColor}"
-          stroke-width="${node.border!.width}" 
+          stroke-width="${node.border!.width}"
           stroke-dasharray="${node.border!.strokeDasharray}"
           marker-end='url(#markerTriangle)' />`
         break;
@@ -478,8 +481,6 @@ export class HtmlDrawer implements Drawer {
         console.warn("Undefine shape type.");
     }
 
-    html += `</svg>`
-
     if (node.textNode) {
       let content = this.drawTextNode(node.textNode!)
       if (node.bgColor) {
@@ -501,7 +502,9 @@ export class HtmlDrawer implements Drawer {
         html += content
       }
     }
-    
+
+    html += `</svg>`
+
     return html
   }
 

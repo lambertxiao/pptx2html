@@ -77,3 +77,7 @@ export function getSchemeColorFromTheme(theme: any, schemeClr: string) {
 
 	return color;
 }
+
+export function printObj(obj: any) {
+	console.log(JSON.stringify(obj, null, 2))
+}
