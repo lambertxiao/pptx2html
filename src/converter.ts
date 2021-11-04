@@ -107,10 +107,13 @@ export default class PPTXConverter {
       return svs
     }
 
+    let promises = []
     for (const slide of this.gprops?.slidePaths!) {
       let processor = new SlideProcessor(slide, this.provider!, this.gprops!)
-      svs.push(await processor.process())
+      promises.push(processor.process())
     }
+
+    svs = await Promise.all(promises)
 
     return svs
   }
