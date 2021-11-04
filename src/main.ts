@@ -16,9 +16,9 @@ async function main() {
 
   let converter = new PPTXConverter(srcFile)
   let slideViews = await converter.convert()
-  
-  let templateHtml = path.resolve("./web/pptx.html")
-  let templateCss = path.resolve("./web/pptx.css")
+
+  let templateHtml = path.resolve("../web/pptx.html")
+  let templateCss = path.resolve("../web/pptx.css")
   let drawer = new HtmlDrawer(templateHtml, templateCss)
   let html = drawer.draw(slideViews)
 
