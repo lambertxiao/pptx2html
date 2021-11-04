@@ -71,6 +71,7 @@ export class ThemeContent {
 }
 
 export class NodeElement {
+  name?: string
   eleType?: string
   zindex?: string
   width?: number
@@ -96,7 +97,7 @@ export class PicNode extends NodeElement {
 export class ShapeNode extends NodeElement {
   shapeType?: string
   bgColor?: string
-  bgImg?: ArrayBuffer
+  bgImg?: string
   textNode?: TextNode
   border?: Border
   ShapeWidth?: number

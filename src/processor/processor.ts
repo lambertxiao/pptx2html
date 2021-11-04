@@ -27,11 +27,11 @@ export default abstract class NodeProcessor {
     let off = undefined;
     let x = -1, y = -1;
 
-    if (slideSpNode !== undefined) {
+    if (slideSpNode) {
       off = slideSpNode["a:off"]["attrs"];
-    } else if (slideLayoutSpNode !== undefined) {
+    } else if (slideLayoutSpNode) {
       off = slideLayoutSpNode["a:off"]["attrs"];
-    } else if (slideMasterSpNode !== undefined) {
+    } else if (slideMasterSpNode) {
       off = slideMasterSpNode["a:off"]["attrs"];
     }
 
@@ -48,11 +48,11 @@ export default abstract class NodeProcessor {
     let ext = undefined;
     let w = -1, h = -1;
 
-    if (slideSpNode !== undefined) {
+    if (slideSpNode) {
       ext = slideSpNode["a:ext"]["attrs"];
-    } else if (slideLayoutSpNode !== undefined) {
+    } else if (slideLayoutSpNode) {
       ext = slideLayoutSpNode["a:ext"]["attrs"];
-    } else if (slideMasterSpNode !== undefined) {
+    } else if (slideMasterSpNode) {
       ext = slideMasterSpNode["a:ext"]["attrs"];
     }
 
@@ -82,7 +82,7 @@ export default abstract class NodeProcessor {
       content: buChar,
     }
 
-    if (buFontAttrs !== undefined) {
+    if (buFontAttrs) {
       let marginLeft = parseInt(extractText(pPrNode, ["attrs", "marL"])) * 96 / 914400;
       let marginRight = parseInt(buFontAttrs["pitchFamily"]);
 
@@ -246,7 +246,7 @@ export default abstract class NodeProcessor {
 
   getFontSize(node: any, slideLayoutSpNode: any, type: any, slideMasterTextStyles: any) {
     let fontSize: any;
-    if (node["a:rPr"] !== undefined) {
+    if (node["a:rPr"]) {
       fontSize = parseInt(node["a:rPr"]["attrs"]["sz"]) / 100;
     }
 
@@ -271,7 +271,7 @@ export default abstract class NodeProcessor {
     }
 
     let baseline = extractText(node, ["a:rPr", "attrs", "baseline"]);
-    if (baseline !== undefined && !isNaN(fontSize)) {
+    if (baseline && !isNaN(fontSize)) {
       fontSize -= 10;
     }
 
@@ -279,15 +279,15 @@ export default abstract class NodeProcessor {
   }
 
   getFontBold(node: any) {
-    return (node["a:rPr"] !== undefined && node["a:rPr"]["attrs"]["b"] === "1") ? "bold" : "initial";
+    return (node["a:rPr"] && node["a:rPr"]["attrs"]["b"] === "1") ? "bold" : "initial";
   }
 
   getFontItalic(node: any) {
-    return (node["a:rPr"] !== undefined && node["a:rPr"]["attrs"]["i"] === "1") ? "italic" : "normal";
+    return (node["a:rPr"] && node["a:rPr"]["attrs"]["i"] === "1") ? "italic" : "normal";
   }
 
   getFontDecoration(node: any) {
-    return (node["a:rPr"] !== undefined && node["a:rPr"]["attrs"]["u"] === "sng") ? "underline" : "initial";
+    return (node["a:rPr"] && node["a:rPr"]["attrs"]["u"] === "sng") ? "underline" : "initial";
   }
 
   getTextVerticalAlign(node: any) {

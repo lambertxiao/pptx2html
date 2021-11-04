@@ -54,6 +54,41 @@ export function img2Base64(data: any) {
 	return base64;
 }
 
+export function toBase64ImgLink(mimeType: string, buff: ArrayBuffer) {
+	return `data:${mimeType};base64,${img2Base64(buff)}`
+}
+
+export function getImgMimeType(imgName: string) {
+	let imgFileExt = extractFileExtension(imgName).toLowerCase();
+
+	let mimeType
+	switch (imgFileExt) {
+		case "jpg":
+		case "jpeg":
+			mimeType = "image/jpeg";
+			break;
+		case "png":
+			mimeType = "image/png";
+			break;
+		case "gif":
+			mimeType = "image/gif";
+			break;
+		case "emf": // Not native support
+			mimeType = "image/x-emf";
+			break;
+		case "wmf": // Not native support
+			mimeType = "image/x-wmf";
+			break;
+		case "tiff":
+			mimeType = "image/tiff";
+			break;
+		default:
+			mimeType = "image/*";
+	}
+
+	return mimeType
+}
+
 export function computePixel(emus: string): number {
 	return Math.round(parseInt(emus) * 96 / 914400)
 }

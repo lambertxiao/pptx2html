@@ -22,12 +22,14 @@ export default class GraphicProcessor extends NodeProcessor {
   }
 
   genTable(node: any) {
+    let name = extractText(node, ["p:nvSpPr", "p:cNvPr", "attrs", "name"])
     let order = node["attrs"]["order"];
     let _tableNode = extractText(node, ["a:graphic", "a:graphicData", "a:tbl"]);
     let xfrmNode = extractText(node, ["p:xfrm"]);
     let { width, height } = this.getSize(xfrmNode, undefined, undefined)
     let { top, left } = this.getPosition(xfrmNode, undefined, undefined)
     let tableNode = new TableNode()
+    tableNode.name = name
     tableNode.top = top
     tableNode.left = left
     tableNode.width = width
@@ -83,8 +85,6 @@ export default class GraphicProcessor extends NodeProcessor {
 
       tableNode.rows.push(row);
     }
-
-    console.log(tableNode)
 
     return tableNode;
   }

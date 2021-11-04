@@ -1,6 +1,6 @@
 import PPTXProvider from '../provider';
 import { Border, ShapeNode, SingleSlide } from '../model';
-import { computePixel, extractText, printObj } from '../util';
+import { computePixel, extractText, getImgMimeType, printObj, toBase64ImgLink } from '../util';
 import NodeProcessor from './processor';
 const colz = require('colz');
 
@@ -54,6 +54,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
   async process() {
     let node = this.node
+    let name = extractText(node, ["p:nvSpPr", "p:cNvPr", "attrs", "name"])
     let xfrmList = ["p:spPr", "a:xfrm"];
     let slideXfrmNode = extractText(this.node, xfrmList);
     let slideLayoutXfrmNode = extractText(this.slideLayoutSpNode, xfrmList);
@@ -70,10 +71,14 @@ export default class ShapeTextProcessor extends NodeProcessor {
       eleType: "shape",
       shapeType: shapeType,
       isFlipV: isFlipV,
+      name: name,
     }
 
     if (bgImgId) {
-      shapeNode.bgImg = await this.provider.loadArrayBuffer(this.slide.getTargetFromLayout(bgImgId))
+      let imgPath = this.slide.getTargetFromSlide(bgImgId)
+      let mimeType = getImgMimeType(imgPath)
+      let imgArrayBuffer = await this.provider.loadArrayBuffer(imgPath)
+      shapeNode.bgImg = toBase64ImgLink(mimeType, imgArrayBuffer!)
     }
 
     if (shapeType) {
@@ -93,6 +98,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
       // Fill Color
       let fillColor = this.getShapeFill()
+      console.log(name, fillColor)
       shapeNode.bgColor = fillColor
 
       // Border Color
@@ -148,24 +154,29 @@ export default class ShapeTextProcessor extends NodeProcessor {
     // 1. presentationML
     // p:spPr [a:noFill, solidFill, gradFill, blipFill, pattFill, grpFill]
     // From slide
-    if (extractText(node, ["p:spPr", "a:noFill"]) !== undefined) {
+    if (extractText(node, ["p:spPr", "a:noFill"])) {
       return "none"
     }
 
-    let fillColor =  extractText(node, ["p:spPr", "a:solidFill", "a:srgbClr", "attrs", "val"]);
+    let fillColor = extractText(node, ["p:spPr", "a:solidFill", "a:srgbClr", "attrs", "val"]);
+    let alpha = 1
     // From theme
-    if (fillColor === undefined) {
+    if (!fillColor) {
       let schemeClr = "a:" + extractText(node, ["p:spPr", "a:solidFill", "a:schemeClr", "attrs", "val"]);
       fillColor = this.getSchemeColor(schemeClr);
+      let _alpha = extractText(node, ["p:spPr", "a:solidFill", "a:schemeClr", "a:alpha", "attrs", "val"]);
+      if (_alpha) {
+        alpha = parseInt(_alpha) / 100000
+      }
     }
 
     // 2. drawingML namespace
-    if (fillColor === undefined) {
+    if (!fillColor) {
       let schemeClr = "a:" + extractText(node, ["p:style", "a:fillRef", "a:schemeClr", "attrs", "val"]);
       fillColor = this.getSchemeColor(schemeClr);
     }
 
-    if (fillColor !== undefined) {
+    if (fillColor) {
       fillColor = "#" + fillColor;
 
       // Apply shade or tint
@@ -178,17 +189,19 @@ export default class ShapeTextProcessor extends NodeProcessor {
       if (isNaN(lumOff)) {
         lumOff = 0;
       }
-      fillColor = this.applyLumModify(fillColor, lumMod, lumOff);
+
+      fillColor = this.applyLumModify(fillColor, lumMod, lumOff, alpha);
       return fillColor;
     } else {
       return fillColor;
     }
   }
 
-  applyLumModify(rgbStr: string, factor: number, offset: number) {
+  applyLumModify(rgbStr: string, factor: number, offset: number, alpha: number) {
     var color = new colz.Color(rgbStr);
     color.setLum(color.hsl.l * (1 + offset));
-    return color.rgb.toString();
+    color.setAlpha(alpha)
+    return color.rgba.toString();
 }
 
   getVerticalAlign() {

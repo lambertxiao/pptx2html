@@ -1,7 +1,7 @@
 import PPTXConverter from "./converter";
 import { program } from "commander"
 import path from "node:path";
-import { HtmlDrawer } from "./drawer";
+import { HtmlDrawer } from "./drawer_html";
 import fs from "fs"
 
 async function main() {
