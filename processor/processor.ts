@@ -17,7 +17,7 @@ export default abstract class NodeProcessor {
     this.node = node
   }
 
-  abstract genHTML(): Promise<NodeElement | null>
+  abstract process(): Promise<NodeElement | null>
 
   getSchemeColor(clr: string) {
     return this.slide.gprops!.theme!.getSchemeColor(clr)
@@ -200,7 +200,7 @@ export default abstract class NodeProcessor {
     if (typeof text !== 'string') {
       text = extractTextByPath(node, ["a:fld", "a:t"]);
       if (typeof text !== 'string') {
-        text = "&nbsp;";
+        text = "";
       }
     }
 

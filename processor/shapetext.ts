@@ -52,13 +52,14 @@ export default class ShapeTextProcessor extends NodeProcessor {
     }
   }
 
-  async genHTML() {
+  async process() {
     let node = this.node
     let xfrmList = ["p:spPr", "a:xfrm"];
     let slideXfrmNode = extractTextByPath(this.node, xfrmList);
     let slideLayoutXfrmNode = extractTextByPath(this.slideLayoutSpNode, xfrmList);
     let slideMasterXfrmNode = extractTextByPath(this.slideMasterSpNode, xfrmList);
     let shapeType = extractTextByPath(this.node, ["p:spPr", "a:prstGeom", "attrs", "prst"]);
+    let bgImgId = extractTextByPath(this.node, ["p:spPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
 
     let isFlipV = false;
     if (extractTextByPath(slideXfrmNode, ["attrs", "flipV"]) === "1" || extractTextByPath(slideXfrmNode, ["attrs", "flipH"]) === "1") {
@@ -69,6 +70,10 @@ export default class ShapeTextProcessor extends NodeProcessor {
       eleType: "shape",
       shapeType: shapeType,
       isFlipV: isFlipV,
+    }
+
+    if (bgImgId) {
+      shapeNode.bgImg = await this.provider.loadArrayBuffer(this.slide.getTargetFromLayout(bgImgId))
     }
 
     if (shapeType) {
@@ -187,7 +192,6 @@ export default class ShapeTextProcessor extends NodeProcessor {
 }
 
   getVerticalAlign() {
-    // 上中下對齊: X, <a:bodyPr anchor="ctr">, <a:bodyPr anchor="b">
     let anchor = extractTextByPath(this.node, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
     if (anchor === undefined) {
       anchor = extractTextByPath(this.slideLayoutSpNode, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);

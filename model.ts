@@ -96,6 +96,7 @@ export class PicNode extends NodeElement {
 export class ShapeNode extends NodeElement {
   shapeType?: string
   bgColor?: string
+  bgImg?: ArrayBuffer
   textNode?: TextNode
   border?: Border
   ShapeWidth?: number

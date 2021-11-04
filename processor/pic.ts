@@ -4,7 +4,7 @@ import NodeProcessor from './processor';
 
 export default class PicProcessor extends NodeProcessor {
 
-  async genHTML() {
+  async process() {
     let node = this.node
     let order = node["attrs"]["order"];
     let rid = node["p:blipFill"]["a:blip"]["attrs"]["r:embed"];

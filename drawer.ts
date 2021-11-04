@@ -1,5 +1,6 @@
 import { NodeElement, PicNode, ShapeNode, SlideView, SpanNode, TableNode, TextNode } from "./model";
 import fs from 'fs'
+import { printObj } from "./util";
 
 export interface Drawer {
   draw(nodes: SlideView[]): string
@@ -144,16 +145,20 @@ export class HtmlDrawer implements Drawer {
 
   drawTableNode(node: TableNode) {
     let styles = this.getNodeBasicStyle(node)
-    let html = `<table style="${styles}">`
+    let html = `<table style="${styles}; border: none;">`
 
     for (const row of node.rows) {
       html += `<tr>`
       for (const col of row.cols) {
-        let text = this.drawTextNode(col.text!)
+        let text = this.drawColTextNode(col.text!)
+        if (!text) {
+          continue
+        }
+
         if (col.rowSpan) {
           html += `<td rowspan="${col.rowSpan}">${text}</td>`
         } else if (col.colSpan) {
-          html += `<td colspan="${col.rowSpan}">${text}</td>`
+          html += `<td colspan="${col.colSpan}">${text}</td>`
         } else {
           html += `<td>${text}</td>`
         }
@@ -171,6 +176,8 @@ export class HtmlDrawer implements Drawer {
     let html = `<svg class="drawing" style="${styles}">`
     let fillColor = node.bgColor ? node.bgColor : "none"
     let borderColor = node.border?.color ? node.border?.color : "none"
+
+    console.log(node.bgImg)
 
     switch (node.shapeType) {
       case "accentBorderCallout1":
@@ -509,6 +516,32 @@ export class HtmlDrawer implements Drawer {
     return html
   }
 
+  drawColTextNode(node: TextNode): string {
+    let html = ""
+
+    if (node.content) {
+      let content = this.drawSpanNode(node.content)
+      html += content
+    }
+
+    for (const ph of node.paragraphNodes) {
+      let spans = ""
+      for (const span of ph.spans) {
+        spans += this.drawSpanNode(span)
+      }
+
+      if (spans) {
+        html += `<div class="${node.styleClass}">${spans}</div>`
+      }
+    }
+
+    if (!html) {
+      return ""
+    }
+
+    return `<div>${html}</div>`
+  }
+
   drawTextNode(node: TextNode): string {
     let styles: string[] = []
 
@@ -565,6 +598,10 @@ export class HtmlDrawer implements Drawer {
   }
 
   drawSpanNode(node: SpanNode) {
+    if (!node.content) {
+      return ""
+    }
+
     let span = node
     let styles: string[] = []
     if (span.color) {
@@ -590,8 +627,6 @@ export class HtmlDrawer implements Drawer {
     if (span.textDecoration) {
       styles.push(`text-decoration: ${span.textDecoration};`)
     }
-
-    // if (span.verticalAlign) {}
 
     let strStyles = styles.join("")
     let c = `<span class="text-block" style="${strStyles}">${node.content}</span>`

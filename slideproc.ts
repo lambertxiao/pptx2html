@@ -1,6 +1,6 @@
 import PPTXProvider from './provider';
 import { GlobalProps, NodeElement, NodeElementGroup, SingleSlide, SlideView } from './model';
-import { extractTextByPath, getSchemeColorFromTheme, img2Base64 } from './util';
+import { extractTextByPath, getSchemeColorFromTheme, img2Base64, printObj } from './util';
 import PicProcessor from './processor/pic';
 import ShapeTextProcessor from './processor/shapetext';
 import GraphicProcessor from './processor/graphic'
@@ -66,10 +66,6 @@ export default class SlideProcessor {
 
   loadLayoutBg() {
     let resId = extractTextByPath(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
-    if (!resId) {
-      resId = extractTextByPath(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
-    }
-
     let relationships = this.slide!.layoutResContent["Relationships"]["Relationship"]
 
     for (const relationship of relationships) {
@@ -352,23 +348,23 @@ export default class SlideProcessor {
 
   async processShapeAndTextNode(nodeVal: any) {
     let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, false)
-    let html = await sp.genHTML()
+    let html = await sp.process()
     return html
   }
 
   async processCxnSpNode(nodeVal: any) {
     let sp = new ShapeTextProcessor(this.provider, this.slide!, nodeVal, true)
-    return await sp.genHTML()
+    return await sp.process()
   }
 
   async processPicNode(nodeVal: any) {
     let picNode = new PicProcessor(this.provider, this.slide!, nodeVal)
-    return await picNode.genHTML()
+    return await picNode.process()
   }
 
   async processGraphicFrameNode(nodeVal: any) {
     let n = new GraphicProcessor(this.provider, this.slide!, nodeVal)
-    return await n.genHTML()
+    return await n.process()
   }
 
   async processGroupSpNode(node: any) {

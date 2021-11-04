@@ -1,4 +1,3 @@
-import { table } from 'console';
 import { randomInt } from 'crypto';
 import { ChartNode, DiagramNode, TableCol, TableNode, TableRow, TextNode } from '../model';
 import { extractTextByPath } from '../util';
@@ -6,7 +5,7 @@ import NodeProcessor from './processor';
 
 export default class GraphicProcessor extends NodeProcessor {
 
-  async genHTML() {
+  async process() {
     let node = this.node
     let graphicTypeUri = extractTextByPath(node, ["a:graphic", "a:graphicData", "attrs", "uri"]);
 
@@ -44,7 +43,6 @@ export default class GraphicProcessor extends NodeProcessor {
 
         if (tcNodes.constructor === Array) {
           for (let j = 0; j < tcNodes.length; j++) {
-            console.log(tcNodes[j]["a:txBody"])
             let text = this.genTextBody(tcNodes[j]["a:txBody"], "");
             let rowSpan = extractTextByPath(tcNodes[j], ["attrs", "rowSpan"]);
             let colSpan = extractTextByPath(tcNodes[j], ["attrs", "gridSpan"]);
