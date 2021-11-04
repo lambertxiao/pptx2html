@@ -54,13 +54,13 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
   async process() {
     let node = this.node
-    let name = extractText(node, ["p:nvSpPr", "p:cNvPr", "attrs", "name"])
     let xfrmList = ["p:spPr", "a:xfrm"];
     let slideXfrmNode = extractText(this.node, xfrmList);
     let slideLayoutXfrmNode = extractText(this.slideLayoutSpNode, xfrmList);
     let slideMasterXfrmNode = extractText(this.slideMasterSpNode, xfrmList);
     let shapeType = extractText(this.node, ["p:spPr", "a:prstGeom", "attrs", "prst"]);
     let bgImgId = extractText(this.node, ["p:spPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    let fontColor = this.getFontColor()
 
     let isFlipV = false;
     if (extractText(slideXfrmNode, ["attrs", "flipV"]) === "1" || extractText(slideXfrmNode, ["attrs", "flipH"]) === "1") {
@@ -71,7 +71,8 @@ export default class ShapeTextProcessor extends NodeProcessor {
       eleType: "shape",
       shapeType: shapeType,
       isFlipV: isFlipV,
-      name: name,
+      name: this.name,
+      fontColor: fontColor,
     }
 
     if (bgImgId) {
@@ -98,7 +99,6 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
       // Fill Color
       let fillColor = this.getShapeFill()
-      console.log(name, fillColor)
       shapeNode.bgColor = fillColor
 
       // Border Color
@@ -134,6 +134,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
       let textNode = this.genTextBody(node["p:txBody"], this.type);
       let sn: ShapeNode = {
         eleType: "shape",
+        fontColor: fontColor,
         top: top,
         left: left,
         width: width,
@@ -147,6 +148,11 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
       return sn
     }
+  }
+
+  getFontColor() {
+    let fontColor = extractText(this.node, ["p:style", "a:fontRef", "a:schemeClr", "attrs", "val"])
+    return "#" + this.getSchemeColor(fontColor);
   }
 
   getShapeFill() {
@@ -229,34 +235,35 @@ export default class ShapeTextProcessor extends NodeProcessor {
       borderWidth = 1
     }
 
-    // Border color
     let borderColor = extractText(lineNode, ["a:solidFill", "a:srgbClr", "attrs", "val"]);
-    if (borderColor === undefined) {
+    if (!borderColor) {
       let schemeClrNode = extractText(lineNode, ["a:solidFill", "a:schemeClr"]);
-      let schemeClr = "a:" + extractText(schemeClrNode, ["attrs", "val"]);
+      let schemeClr = extractText(schemeClrNode, ["attrs", "val"]);
       borderColor = this.getSchemeColor(schemeClr);
     }
 
     // 2. drawingML namespace
-    if (borderColor === undefined) {
-      let schemeClrNode = extractText(node, ["p:style", "a:lnRef", "a:schemeClr"]);
-      let schemeClr = "a:" + extractText(schemeClrNode, ["attrs", "val"]);
-      let borderColor = this.getSchemeColor(schemeClr);
+    if (!borderColor) {
+      // let schemeClrNode = extractText(node, ["p:style", "a:lnRef", "a:schemeClr"]);
+      // let schemeClr = "a:" + extractText(schemeClrNode, ["attrs", "val"]);
+      // borderColor = this.getSchemeColor(schemeClr);
 
-      if (borderColor !== undefined) {
-        let shade = extractText(schemeClrNode, ["a:shade", "attrs", "val"]);
-        if (shade !== undefined) {
-          shade = parseInt(shade) / 100000;
-          let color = new colz.Color("#" + borderColor);
-          color.setLum(color.hsl.l * shade);
-          borderColor = color.hex.replace("#", "");
-        }
-      }
+      // if (borderColor) {
+      //   let shade = extractText(schemeClrNode, ["a:shade", "attrs", "val"]);
+      //   if (shade) {
+      //     shade = parseInt(shade) / 100000;
+      //     let color = new colz.Color("#" + borderColor);
+      //     color.setLum(color.hsl.l * shade);
+      //     borderColor = color.hex.replace("#", "");
+      //   }
+      // }
     }
 
     if (borderColor) {
       borderColor = "#" + borderColor;
     }
+
+    console.log(this.name, borderColor)
 
     // Border type
     let _borderType = extractText(lineNode, ["a:prstDash", "attrs", "val"]);

@@ -8,6 +8,7 @@ async function main() {
   program
     .option('-s, --src <string>', 'src pptx file')
     .option('-o, --outdir <string>', 'output dir')
+    .option('-p, --page <number>', 'specified page')
 
   program.parse(process.argv)
   const options = program.opts()
@@ -15,8 +16,7 @@ async function main() {
   let outDir = path.resolve(options.outdir)
 
   let converter = new PPTXConverter(srcFile)
-  let slideViews = await converter.convert()
-
+  let slideViews = await converter.convert(options.page)
   let templateHtml = path.resolve("../web/pptx.html")
   let templateCss = path.resolve("../web/pptx.css")
   let drawer = new HtmlDrawer(templateHtml, templateCss)

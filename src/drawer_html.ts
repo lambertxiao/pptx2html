@@ -1,6 +1,7 @@
 import { CssStyle, Drawer } from "./drawer"
 import { NodeElement, PicNode, ShapeNode, SlideView, SpanNode, TableNode, TextNode } from "./model";
 import fs from 'fs'
+import { printObj } from "./util";
 
 export class HtmlDrawer implements Drawer {
 
@@ -135,6 +136,7 @@ export class HtmlDrawer implements Drawer {
   }
 
   drawShapeNode(node: ShapeNode): string {
+    printObj(node)
     let styles = this.getNodeBasicStyle(node)
     let fillColor = node.bgColor ? node.bgColor : "none"
     let borderColor = node.border?.color ? node.border?.color : "none"
@@ -366,7 +368,7 @@ export class HtmlDrawer implements Drawer {
           `<line
             x1="${node.ShapeWidth}" y1='0'
             x2='0' y2="${node.ShapeHeight}"
-            stroke="${borderColor}"
+            stroke="${node.fontColor}"
             stroke-width="${node.border!.width}"
             stroke-dasharray="${node.border!.strokeDasharray}"
           />
@@ -376,7 +378,7 @@ export class HtmlDrawer implements Drawer {
           `<line
             x1="0" y1="0"
             x2="${node.ShapeWidth}" y2="${node.ShapeHeight}"
-            stroke="${borderColor}"
+            stroke="${node.fontColor}"
             stroke-width="${node.border!.width}"
             stroke-dasharray="${node.border!.strokeDasharray}"
           />

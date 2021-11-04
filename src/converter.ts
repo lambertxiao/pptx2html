@@ -2,6 +2,7 @@ import SlideProcessor from './slideproc'
 import PPTXProvider from './provider'
 import { computePixel, img2Base64 } from './util'
 import { GlobalProps, SlideView, ThemeContent } from './model'
+import { exit } from 'process'
 
 export default class PPTXConverter {
   srcFilePath: string
@@ -14,7 +15,7 @@ export default class PPTXConverter {
     this.provider = new PPTXProvider(this.srcFilePath)
   }
 
-  async convert() {
+  async convert(page: string) {
     await this.provider.init()
     let [slideWidth, slideHeight] = await this.loadSlideSize()
     let [slidePaths, slideLayouts] = await this.loadSlidesAndLayouts()
@@ -27,7 +28,7 @@ export default class PPTXConverter {
     this.gprops.slideLayouts = slideLayouts
     this.gprops.theme = new ThemeContent(await this.loadTheme())
 
-    return await this.processSlides()
+    return await this.processSlides(page)
   }
 
   async loadThumbImg() {
@@ -90,17 +91,25 @@ export default class PPTXConverter {
     return await this.provider.loadXML("ppt/" + themeURI)
   }
 
-  async processSlides() {
-    let i = 0
+  async processSlides(page: string) {
     let svs: SlideView[] = []
+
+    if (page) {
+      let pageNum = parseInt(page)
+      let slide = this.gprops.slidePaths![pageNum]
+      if (!slide) {
+        console.log("invalid page")
+        exit()
+      }
+
+      let processor = new SlideProcessor(slide, this.provider!, this.gprops!)
+      svs.push(await processor.process())
+      return svs
+    }
+
     for (const slide of this.gprops?.slidePaths!) {
-      // if (i == 5) {
-        let processor = new SlideProcessor(
-          slide, i, this.provider!,  this.gprops!,
-          )
-          svs.push(await processor.process())
-        // }
-      i++
+      let processor = new SlideProcessor(slide, this.provider!, this.gprops!)
+      svs.push(await processor.process())
     }
 
     return svs

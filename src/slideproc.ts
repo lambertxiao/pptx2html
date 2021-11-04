@@ -17,7 +17,6 @@ export default class SlideProcessor {
 
   constructor(
     private readonly slidePath: string,
-    private readonly index: number,
     private readonly provider: PPTXProvider,
     gprops: GlobalProps,
   ) {
