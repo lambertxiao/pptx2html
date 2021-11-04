@@ -1,6 +1,6 @@
 import PPTXProvider from './provider';
 import { GlobalProps, NodeElement, NodeElementGroup, SingleSlide, SlideView } from './model';
-import { extractTextByPath, getSchemeColorFromTheme, img2Base64, printObj } from './util';
+import { extractText, getSchemeColorFromTheme, img2Base64, printObj } from './util';
 import PicProcessor from './processor/pic';
 import ShapeTextProcessor from './processor/shapetext';
 import GraphicProcessor from './processor/graphic'
@@ -45,7 +45,7 @@ export default class SlideProcessor {
     let masterFilePath = this.getSlideMasterFilePath(slide.layoutResContent)
     slide.masterContent = await this.provider.loadXML(masterFilePath)
     slide.masterIndexTable = this.indexNodes(slide.masterContent)
-    slide.masterTextStyles = extractTextByPath(slide.masterContent, ["p:sldMaster", "p:txStyles"]);
+    slide.masterTextStyles = extractText(slide.masterContent, ["p:sldMaster", "p:txStyles"]);
     slide.masterResContent = await this.getMasterRes(masterFilePath)
 
     let layoutBgPath = this.loadLayoutBg()
@@ -65,7 +65,7 @@ export default class SlideProcessor {
   }
 
   loadLayoutBg() {
-    let resId = extractTextByPath(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    let resId = extractText(this.slide!.layoutContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
     let relationships = this.slide!.layoutResContent["Relationships"]["Relationship"]
 
     for (const relationship of relationships) {
@@ -78,7 +78,7 @@ export default class SlideProcessor {
   }
 
   loadMasterBg() {
-    let resId = extractTextByPath(this.slide!.masterContent, ["p:sldMaster", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    let resId = extractText(this.slide!.masterContent, ["p:sldMaster", "p:cSld", "p:bg", "p:bgPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
     let relationships = this.slide!.masterResContent["Relationships"]["Relationship"]
 
     for (const relationship of relationships) {
@@ -230,11 +230,11 @@ export default class SlideProcessor {
   // 获取背景填充
   getSlideBackgroundColor() {
     let { content, layoutResContent, masterContent } = this.slide!
-    let bgColor = this.getSolidFill(extractTextByPath(content, ["p:sld", "p:cSld", "p:bg", "p:bgPr", "a:solidFill"]));
+    let bgColor = this.getSolidFill(extractText(content, ["p:sld", "p:cSld", "p:bg", "p:bgPr", "a:solidFill"]));
     if (bgColor === undefined) {
-      bgColor = this.getSolidFill(extractTextByPath(layoutResContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:solidFill"]));
+      bgColor = this.getSolidFill(extractText(layoutResContent, ["p:sldLayout", "p:cSld", "p:bg", "p:bgPr", "a:solidFill"]));
       if (bgColor === undefined) {
-        bgColor = this.getSolidFill(extractTextByPath(masterContent, ["p:sldMaster", "p:cSld", "p:bg", "p:bgPr", "a:solidFill"]));
+        bgColor = this.getSolidFill(extractText(masterContent, ["p:sldMaster", "p:cSld", "p:bg", "p:bgPr", "a:solidFill"]));
         if (bgColor === undefined) {
           bgColor = "#FFF";
         }
@@ -252,9 +252,9 @@ export default class SlideProcessor {
     let color = "FFF";
 
     if (solidFill["a:srgbClr"] !== undefined) {
-      color = extractTextByPath(solidFill["a:srgbClr"], ["attrs", "val"]);
+      color = extractText(solidFill["a:srgbClr"], ["attrs", "val"]);
     } else if (solidFill["a:schemeClr"] !== undefined) {
-      let schemeClr = "a:" + extractTextByPath(solidFill["a:schemeClr"], ["attrs", "val"]);
+      let schemeClr = "a:" + extractText(solidFill["a:schemeClr"], ["attrs", "val"]);
       color = getSchemeColorFromTheme(this.slide!.gprops!.theme, schemeClr);
     }
 
@@ -280,9 +280,9 @@ export default class SlideProcessor {
       if (targetNode.constructor === Array) {
         for (let i = 0; i < targetNode.length; i++) {
           let nvSpPrNode = targetNode[i]["p:nvSpPr"];
-          let id = extractTextByPath(nvSpPrNode, ["p:cNvPr", "attrs", "id"]);
-          let idx = extractTextByPath(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "idx"]);
-          let type = extractTextByPath(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "type"]);
+          let id = extractText(nvSpPrNode, ["p:cNvPr", "attrs", "id"]);
+          let idx = extractText(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "idx"]);
+          let type = extractText(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "type"]);
 
           if (id !== undefined) {
             idTable[id] = targetNode[i];
@@ -296,9 +296,9 @@ export default class SlideProcessor {
         }
       } else {
         let nvSpPrNode = targetNode["p:nvSpPr"];
-        let id = extractTextByPath(nvSpPrNode, ["p:cNvPr", "attrs", "id"]);
-        let idx = extractTextByPath(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "idx"]);
-        let type = extractTextByPath(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "type"]);
+        let id = extractText(nvSpPrNode, ["p:cNvPr", "attrs", "id"]);
+        let idx = extractText(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "idx"]);
+        let type = extractText(nvSpPrNode, ["p:nvPr", "p:ph", "attrs", "type"]);
 
         if (id !== undefined) {
           idTable[id] = targetNode;

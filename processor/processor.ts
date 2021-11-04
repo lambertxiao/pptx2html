@@ -1,6 +1,6 @@
 import PPTXProvider from '../provider';
 import { NodeElement, ParagraphNode, SingleSlide, SpanNode, TextNode } from '../model';
-import { computePixel, extractTextByPath, printObj } from '../util';
+import { computePixel, extractText, printObj } from '../util';
 
 export default abstract class NodeProcessor {
   provider: PPTXProvider
@@ -67,23 +67,23 @@ export default abstract class NodeProcessor {
 
   genBuChar(node: any): SpanNode | null {
     let pPrNode = node["a:pPr"];
-    let lvl = parseInt(extractTextByPath(pPrNode, ["attrs", "lvl"]));
+    let lvl = parseInt(extractText(pPrNode, ["attrs", "lvl"]));
     if (isNaN(lvl)) {
       lvl = 0;
     }
 
-    let buChar = extractTextByPath(pPrNode, ["a:buChar", "attrs", "char"]);
+    let buChar = extractText(pPrNode, ["a:buChar", "attrs", "char"]);
     if (!buChar) {
       return null
     }
 
-    let buFontAttrs = extractTextByPath(pPrNode, ["a:buFont", "attrs"]);
+    let buFontAttrs = extractText(pPrNode, ["a:buFont", "attrs"]);
     let spanNode: SpanNode = {
       content: buChar,
     }
 
     if (buFontAttrs !== undefined) {
-      let marginLeft = parseInt(extractTextByPath(pPrNode, ["attrs", "marL"])) * 96 / 914400;
+      let marginLeft = parseInt(extractText(pPrNode, ["attrs", "marL"])) * 96 / 914400;
       let marginRight = parseInt(buFontAttrs["pitchFamily"]);
 
       if (isNaN(marginLeft)) {
@@ -166,20 +166,20 @@ export default abstract class NodeProcessor {
   }
 
   getHorizontalAlign(node: any, type?: string) {
-    let algn = extractTextByPath(node, ["a:pPr", "attrs", "algn"]);
+    let algn = extractText(node, ["a:pPr", "attrs", "algn"]);
     if (algn === undefined) {
-      algn = extractTextByPath(this.slide.layoutContent, ["p:txBody", "a:p", "a:pPr", "attrs", "algn"]);
+      algn = extractText(this.slide.layoutContent, ["p:txBody", "a:p", "a:pPr", "attrs", "algn"]);
       if (algn === undefined) {
-        algn = extractTextByPath(this.slide.masterContent, ["p:txBody", "a:p", "a:pPr", "attrs", "algn"]);
+        algn = extractText(this.slide.masterContent, ["p:txBody", "a:p", "a:pPr", "attrs", "algn"]);
         if (algn === undefined) {
           switch (type) {
             case "title":
             case "subTitle":
             case "ctrTitle":
-              algn = extractTextByPath(this.slide.masterTextStyles, ["p:titleStyle", "a:lvl1pPr", "attrs", "alng"]);
+              algn = extractText(this.slide.masterTextStyles, ["p:titleStyle", "a:lvl1pPr", "attrs", "alng"]);
               break;
             default:
-              algn = extractTextByPath(this.slide.masterTextStyles, ["p:otherStyle", "a:lvl1pPr", "attrs", "alng"]);
+              algn = extractText(this.slide.masterTextStyles, ["p:otherStyle", "a:lvl1pPr", "attrs", "alng"]);
           }
         }
       }
@@ -198,7 +198,7 @@ export default abstract class NodeProcessor {
   genSpanElement(node: any, type?: string): SpanNode {
     let text = node["a:t"];
     if (typeof text !== 'string') {
-      text = extractTextByPath(node, ["a:fld", "a:t"]);
+      text = extractText(node, ["a:fld", "a:t"]);
       if (typeof text !== 'string') {
         text = "";
       }
@@ -211,7 +211,7 @@ export default abstract class NodeProcessor {
       fontStyle: this.getFontItalic(node),
       textDecoration: this.getFontDecoration(node),
       verticalAlign: this.getTextVerticalAlign(node),
-      linkID: extractTextByPath(node, ["a:rPr", "a:hlinkClick", "attrs", "r:id"]),
+      linkID: extractText(node, ["a:rPr", "a:hlinkClick", "attrs", "r:id"]),
       content: text,
     }
 
@@ -219,16 +219,16 @@ export default abstract class NodeProcessor {
   }
 
   getFontType(node: any, type: any) {
-    let typeface = extractTextByPath(node, ["a:rPr", "a:latin", "attrs", "typeface"]);
+    let typeface = extractText(node, ["a:rPr", "a:latin", "attrs", "typeface"]);
 
     if (typeface === undefined) {
-      let fontSchemeNode = extractTextByPath(this.slide!.gprops!.theme, ["a:theme", "a:themeElements", "a:fontScheme"]);
+      let fontSchemeNode = extractText(this.slide!.gprops!.theme, ["a:theme", "a:themeElements", "a:fontScheme"]);
       if (type == "title" || type == "subTitle" || type == "ctrTitle") {
-        typeface = extractTextByPath(fontSchemeNode, ["a:majorFont", "a:latin", "attrs", "typeface"]);
+        typeface = extractText(fontSchemeNode, ["a:majorFont", "a:latin", "attrs", "typeface"]);
       } else if (type == "body") {
-        typeface = extractTextByPath(fontSchemeNode, ["a:minorFont", "a:latin", "attrs", "typeface"]);
+        typeface = extractText(fontSchemeNode, ["a:minorFont", "a:latin", "attrs", "typeface"]);
       } else {
-        typeface = extractTextByPath(fontSchemeNode, ["a:minorFont", "a:latin", "attrs", "typeface"]);
+        typeface = extractText(fontSchemeNode, ["a:minorFont", "a:latin", "attrs", "typeface"]);
       }
     }
 
@@ -236,7 +236,7 @@ export default abstract class NodeProcessor {
   }
 
   getTextByPathStr(node: any, pathStr: any) {
-    return extractTextByPath(node, pathStr.trim().split(/\s+/));
+    return extractText(node, pathStr.trim().split(/\s+/));
   }
 
   getFontColor(node: any) {
@@ -251,26 +251,26 @@ export default abstract class NodeProcessor {
     }
 
     if ((isNaN(fontSize) || fontSize === undefined)) {
-      let sz = extractTextByPath(slideLayoutSpNode, ["p:txBody", "a:lstStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
+      let sz = extractText(slideLayoutSpNode, ["p:txBody", "a:lstStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
       fontSize = parseInt(sz) / 100;
     }
 
     if (isNaN(fontSize) || fontSize === undefined) {
       let sz: any
       if (type == "title" || type == "subTitle" || type == "ctrTitle") {
-        sz = extractTextByPath(slideMasterTextStyles, ["p:titleStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
+        sz = extractText(slideMasterTextStyles, ["p:titleStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
       } else if (type == "body") {
-        sz = extractTextByPath(slideMasterTextStyles, ["p:bodyStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
+        sz = extractText(slideMasterTextStyles, ["p:bodyStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
       } else if (type == "dt" || type == "sldNum") {
         sz = "1200";
       } else if (type === undefined) {
-        sz = extractTextByPath(slideMasterTextStyles, ["p:otherStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
+        sz = extractText(slideMasterTextStyles, ["p:otherStyle", "a:lvl1pPr", "a:defRPr", "attrs", "sz"]);
       }
 
       fontSize = parseInt(sz) / 100;
     }
 
-    let baseline = extractTextByPath(node, ["a:rPr", "attrs", "baseline"]);
+    let baseline = extractText(node, ["a:rPr", "attrs", "baseline"]);
     if (baseline !== undefined && !isNaN(fontSize)) {
       fontSize -= 10;
     }
@@ -291,7 +291,7 @@ export default abstract class NodeProcessor {
   }
 
   getTextVerticalAlign(node: any) {
-    let baseline = extractTextByPath(node, ["a:rPr", "attrs", "baseline"]);
+    let baseline = extractText(node, ["a:rPr", "attrs", "baseline"]);
     return baseline === undefined ? "baseline" : (parseInt(baseline) / 1000) + "%";
   }
 }

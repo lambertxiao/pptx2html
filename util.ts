@@ -1,4 +1,4 @@
-export function extractTextByPath(node: any, path: string[]) {
+export function extractText(node: any, path: string[]) {
 	if (path.constructor !== Array) {
 		throw Error("Error of path type! path is not array.");
 	}
@@ -69,10 +69,10 @@ export function getSchemeColorFromTheme(theme: any, schemeClr: string) {
 		case "bg1": schemeClr = "a:lt1"; break;
 		case "bg2": schemeClr = "a:lt2"; break;
 	}
-	let refNode = extractTextByPath(theme, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
-	let color = extractTextByPath(refNode, ["a:srgbClr", "attrs", "val"]);
+	let refNode = extractText(theme, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
+	let color = extractText(refNode, ["a:srgbClr", "attrs", "val"]);
 	if (color === undefined) {
-		color = extractTextByPath(refNode, ["a:sysClr", "attrs", "lastClr"]);
+		color = extractText(refNode, ["a:sysClr", "attrs", "lastClr"]);
 	}
 
 	return color;

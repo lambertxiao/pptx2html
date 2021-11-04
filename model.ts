@@ -1,4 +1,4 @@
-import { extractTextByPath } from "./util"
+import { extractText } from "./util"
 
 export class GlobalProps {
   slideWidth?: number
@@ -60,10 +60,10 @@ export class ThemeContent {
       case "bg1": schemeClr = "a:lt1"; break;
       case "bg2": schemeClr = "a:lt2"; break;
     }
-    let refNode = extractTextByPath(this.content, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
-    let color = extractTextByPath(refNode, ["a:srgbClr", "attrs", "val"]);
+    let refNode = extractText(this.content, ["a:theme", "a:themeElements", "a:clrScheme", schemeClr]);
+    let color = extractText(refNode, ["a:srgbClr", "attrs", "val"]);
     if (color === undefined) {
-      color = extractTextByPath(refNode, ["a:sysClr", "attrs", "lastClr"]);
+      color = extractText(refNode, ["a:sysClr", "attrs", "lastClr"]);
     }
 
     return color;

@@ -1,13 +1,13 @@
 import { randomInt } from 'crypto';
 import { ChartNode, DiagramNode, TableCol, TableNode, TableRow, TextNode } from '../model';
-import { extractTextByPath } from '../util';
+import { extractText } from '../util';
 import NodeProcessor from './processor';
 
 export default class GraphicProcessor extends NodeProcessor {
 
   async process() {
     let node = this.node
-    let graphicTypeUri = extractTextByPath(node, ["a:graphic", "a:graphicData", "attrs", "uri"]);
+    let graphicTypeUri = extractText(node, ["a:graphic", "a:graphicData", "attrs", "uri"]);
 
     switch (graphicTypeUri) {
       case "http://schemas.openxmlformats.org/drawingml/2006/table":
@@ -23,8 +23,8 @@ export default class GraphicProcessor extends NodeProcessor {
 
   genTable(node: any) {
     let order = node["attrs"]["order"];
-    let _tableNode = extractTextByPath(node, ["a:graphic", "a:graphicData", "a:tbl"]);
-    let xfrmNode = extractTextByPath(node, ["p:xfrm"]);
+    let _tableNode = extractText(node, ["a:graphic", "a:graphicData", "a:tbl"]);
+    let xfrmNode = extractText(node, ["p:xfrm"]);
     let { width, height } = this.getSize(xfrmNode, undefined, undefined)
     let { top, left } = this.getPosition(xfrmNode, undefined, undefined)
     let tableNode = new TableNode()
@@ -44,10 +44,10 @@ export default class GraphicProcessor extends NodeProcessor {
         if (tcNodes.constructor === Array) {
           for (let j = 0; j < tcNodes.length; j++) {
             let text = this.genTextBody(tcNodes[j]["a:txBody"], "");
-            let rowSpan = extractTextByPath(tcNodes[j], ["attrs", "rowSpan"]);
-            let colSpan = extractTextByPath(tcNodes[j], ["attrs", "gridSpan"]);
-            let vMerge = extractTextByPath(tcNodes[j], ["attrs", "vMerge"]);
-            let hMerge = extractTextByPath(tcNodes[j], ["attrs", "hMerge"]);
+            let rowSpan = extractText(tcNodes[j], ["attrs", "rowSpan"]);
+            let colSpan = extractText(tcNodes[j], ["attrs", "gridSpan"]);
+            let vMerge = extractText(tcNodes[j], ["attrs", "vMerge"]);
+            let hMerge = extractText(tcNodes[j], ["attrs", "hMerge"]);
 
             let col = new TableCol()
             col.rowSpan = rowSpan
@@ -92,7 +92,7 @@ export default class GraphicProcessor extends NodeProcessor {
   genChart(node: any) {
     let chartID = randomInt(2<<10)
     let order = node["attrs"]["order"];
-    let xfrmNode = extractTextByPath(node, ["p:xfrm"]);
+    let xfrmNode = extractText(node, ["p:xfrm"]);
     let result = "<div id='chart" + chartID + "' class='block content' style='" +
       this.getPosition(xfrmNode, undefined, undefined) + this.getSize(xfrmNode, undefined, undefined) +
       " z-index: " + order + ";'></div>";
@@ -100,7 +100,7 @@ export default class GraphicProcessor extends NodeProcessor {
     let rid = node["a:graphic"]["a:graphicData"]["c:chart"]["attrs"]["r:id"];
     let refName = this.slide.resContent[rid]["target"];
     let content = this.provider.loadXML(refName)
-    let plotArea = extractTextByPath(content, ["c:chartSpace", "c:chart", "c:plotArea"]);
+    let plotArea = extractText(content, ["c:chartSpace", "c:chart", "c:plotArea"]);
 
     let chartData = null;
     for (let key in plotArea) {
@@ -199,16 +199,16 @@ export default class GraphicProcessor extends NodeProcessor {
     } else {
       this.eachElement(serNode, (innerNode: any, index: number) => {
         var dataRow = new Array();
-        var colName = extractTextByPath(innerNode, ["c:tx", "c:strRef", "c:strCache", "c:pt", "c:v"]) || index;
+        var colName = extractText(innerNode, ["c:tx", "c:strRef", "c:strCache", "c:pt", "c:v"]) || index;
 
         // Category (string or number)
         let rowNames: any = {};
-        if (extractTextByPath(innerNode, ["c:cat", "c:strRef", "c:strCache", "c:pt"]) !== undefined) {
+        if (extractText(innerNode, ["c:cat", "c:strRef", "c:strCache", "c:pt"]) !== undefined) {
           this.eachElement(innerNode["c:cat"]["c:strRef"]["c:strCache"]["c:pt"], (innerNode: any, index: number) => {
             rowNames[innerNode["attrs"]["idx"]] = innerNode["c:v"];
             return "";
           });
-        } else if (extractTextByPath(innerNode, ["c:cat", "c:numRef", "c:numCache", "c:pt"]) !== undefined) {
+        } else if (extractText(innerNode, ["c:cat", "c:numRef", "c:numCache", "c:pt"]) !== undefined) {
           this.eachElement(innerNode["c:cat"]["c:numRef"]["c:numCache"]["c:pt"], (innerNode: any, index: number) =>{
             rowNames[innerNode["attrs"]["idx"]] = innerNode["c:v"];
             return "";
@@ -216,7 +216,7 @@ export default class GraphicProcessor extends NodeProcessor {
         }
 
         // Value
-        if (extractTextByPath(innerNode, ["c:val", "c:numRef", "c:numCache", "c:pt"]) !== undefined) {
+        if (extractText(innerNode, ["c:val", "c:numRef", "c:numCache", "c:pt"]) !== undefined) {
           this.eachElement(innerNode["c:val"]["c:numRef"]["c:numCache"]["c:pt"],  (innerNode: any, index: number) => {
             dataRow.push({ x: innerNode["attrs"]["idx"], y: parseFloat(innerNode["c:v"]) });
             return "";
@@ -249,7 +249,7 @@ export default class GraphicProcessor extends NodeProcessor {
 
   genDiagram(node: any) {
     var order = node["attrs"]["order"];
-    var xfrmNode = extractTextByPath(node, ["p:xfrm"]);
+    var xfrmNode = extractText(node, ["p:xfrm"]);
     return "<div class='block content' style='border: 1px dotted;" +
       this.getPosition(xfrmNode, undefined, undefined) + this.getSize(xfrmNode, undefined, undefined) +
       "'>TODO: diagram</div>";

@@ -1,6 +1,6 @@
 import PPTXProvider from '../provider';
 import { Border, ShapeNode, SingleSlide } from '../model';
-import { computePixel, extractTextByPath, printObj } from '../util';
+import { computePixel, extractText, printObj } from '../util';
 import NodeProcessor from './processor';
 const colz = require('colz');
 
@@ -41,9 +41,9 @@ export default class ShapeTextProcessor extends NodeProcessor {
       }
 
       if (type === undefined) {
-        type = extractTextByPath(this.slideLayoutSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
+        type = extractText(this.slideLayoutSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
         if (type === undefined) {
-          type = extractTextByPath(this.slideMasterSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
+          type = extractText(this.slideMasterSpNode, ["p:nvSpPr", "p:nvPr", "p:ph", "attrs", "type"]);
         }
       }
 
@@ -55,14 +55,14 @@ export default class ShapeTextProcessor extends NodeProcessor {
   async process() {
     let node = this.node
     let xfrmList = ["p:spPr", "a:xfrm"];
-    let slideXfrmNode = extractTextByPath(this.node, xfrmList);
-    let slideLayoutXfrmNode = extractTextByPath(this.slideLayoutSpNode, xfrmList);
-    let slideMasterXfrmNode = extractTextByPath(this.slideMasterSpNode, xfrmList);
-    let shapeType = extractTextByPath(this.node, ["p:spPr", "a:prstGeom", "attrs", "prst"]);
-    let bgImgId = extractTextByPath(this.node, ["p:spPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
+    let slideXfrmNode = extractText(this.node, xfrmList);
+    let slideLayoutXfrmNode = extractText(this.slideLayoutSpNode, xfrmList);
+    let slideMasterXfrmNode = extractText(this.slideMasterSpNode, xfrmList);
+    let shapeType = extractText(this.node, ["p:spPr", "a:prstGeom", "attrs", "prst"]);
+    let bgImgId = extractText(this.node, ["p:spPr", "a:blipFill", "a:blip", "attrs", "r:embed"])
 
     let isFlipV = false;
-    if (extractTextByPath(slideXfrmNode, ["attrs", "flipV"]) === "1" || extractTextByPath(slideXfrmNode, ["attrs", "flipH"]) === "1") {
+    if (extractText(slideXfrmNode, ["attrs", "flipV"]) === "1" || extractText(slideXfrmNode, ["attrs", "flipH"]) === "1") {
       isFlipV = true;
     }
 
@@ -77,7 +77,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
     }
 
     if (shapeType) {
-      let ext = extractTextByPath(slideXfrmNode, ["a:ext", "attrs"]);
+      let ext = extractText(slideXfrmNode, ["a:ext", "attrs"]);
       let w = computePixel(ext["cx"])
       let h = computePixel(ext["cy"])
       let { top, left } = this.getPosition(slideXfrmNode, slideLayoutXfrmNode, slideMasterXfrmNode)
@@ -148,20 +148,20 @@ export default class ShapeTextProcessor extends NodeProcessor {
     // 1. presentationML
     // p:spPr [a:noFill, solidFill, gradFill, blipFill, pattFill, grpFill]
     // From slide
-    if (extractTextByPath(node, ["p:spPr", "a:noFill"]) !== undefined) {
+    if (extractText(node, ["p:spPr", "a:noFill"]) !== undefined) {
       return "none"
     }
 
-    let fillColor =  extractTextByPath(node, ["p:spPr", "a:solidFill", "a:srgbClr", "attrs", "val"]);
+    let fillColor =  extractText(node, ["p:spPr", "a:solidFill", "a:srgbClr", "attrs", "val"]);
     // From theme
     if (fillColor === undefined) {
-      let schemeClr = "a:" + extractTextByPath(node, ["p:spPr", "a:solidFill", "a:schemeClr", "attrs", "val"]);
+      let schemeClr = "a:" + extractText(node, ["p:spPr", "a:solidFill", "a:schemeClr", "attrs", "val"]);
       fillColor = this.getSchemeColor(schemeClr);
     }
 
     // 2. drawingML namespace
     if (fillColor === undefined) {
-      let schemeClr = "a:" + extractTextByPath(node, ["p:style", "a:fillRef", "a:schemeClr", "attrs", "val"]);
+      let schemeClr = "a:" + extractText(node, ["p:style", "a:fillRef", "a:schemeClr", "attrs", "val"]);
       fillColor = this.getSchemeColor(schemeClr);
     }
 
@@ -170,8 +170,8 @@ export default class ShapeTextProcessor extends NodeProcessor {
 
       // Apply shade or tint
       // TODO: 較淺, 較深 80%
-      let lumMod = parseInt(extractTextByPath(node, ["p:spPr", "a:solidFill", "a:schemeClr", "a:lumMod", "attrs", "val"])) / 100000;
-      let lumOff = parseInt(extractTextByPath(node, ["p:spPr", "a:solidFill", "a:schemeClr", "a:lumOff", "attrs", "val"])) / 100000;
+      let lumMod = parseInt(extractText(node, ["p:spPr", "a:solidFill", "a:schemeClr", "a:lumMod", "attrs", "val"])) / 100000;
+      let lumOff = parseInt(extractText(node, ["p:spPr", "a:solidFill", "a:schemeClr", "a:lumOff", "attrs", "val"])) / 100000;
       if (isNaN(lumMod)) {
         lumMod = 1.0;
       }
@@ -192,11 +192,11 @@ export default class ShapeTextProcessor extends NodeProcessor {
 }
 
   getVerticalAlign() {
-    let anchor = extractTextByPath(this.node, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
+    let anchor = extractText(this.node, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
     if (anchor === undefined) {
-      anchor = extractTextByPath(this.slideLayoutSpNode, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
+      anchor = extractText(this.slideLayoutSpNode, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
       if (anchor === undefined) {
-        anchor = extractTextByPath(this.slideMasterSpNode, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
+        anchor = extractText(this.slideMasterSpNode, ["p:txBody", "a:bodyPr", "attrs", "anchor"]);
       }
     }
 
@@ -211,27 +211,27 @@ export default class ShapeTextProcessor extends NodeProcessor {
     let borderWidthUnit = "pt"
 
     // Border width: 1pt = 12700, default = 0.75pt
-    let borderWidth = parseInt(extractTextByPath(lineNode, ["attrs", "w"])) / 12700 / 5;
+    let borderWidth = parseInt(extractText(lineNode, ["attrs", "w"])) / 12700 / 5;
     if (isNaN(borderWidth) || borderWidth < 1) {
       borderWidth = 1
     }
 
     // Border color
-    let borderColor = extractTextByPath(lineNode, ["a:solidFill", "a:srgbClr", "attrs", "val"]);
+    let borderColor = extractText(lineNode, ["a:solidFill", "a:srgbClr", "attrs", "val"]);
     if (borderColor === undefined) {
-      let schemeClrNode = extractTextByPath(lineNode, ["a:solidFill", "a:schemeClr"]);
-      let schemeClr = "a:" + extractTextByPath(schemeClrNode, ["attrs", "val"]);
+      let schemeClrNode = extractText(lineNode, ["a:solidFill", "a:schemeClr"]);
+      let schemeClr = "a:" + extractText(schemeClrNode, ["attrs", "val"]);
       borderColor = this.getSchemeColor(schemeClr);
     }
 
     // 2. drawingML namespace
     if (borderColor === undefined) {
-      let schemeClrNode = extractTextByPath(node, ["p:style", "a:lnRef", "a:schemeClr"]);
-      let schemeClr = "a:" + extractTextByPath(schemeClrNode, ["attrs", "val"]);
+      let schemeClrNode = extractText(node, ["p:style", "a:lnRef", "a:schemeClr"]);
+      let schemeClr = "a:" + extractText(schemeClrNode, ["attrs", "val"]);
       let borderColor = this.getSchemeColor(schemeClr);
 
       if (borderColor !== undefined) {
-        let shade = extractTextByPath(schemeClrNode, ["a:shade", "attrs", "val"]);
+        let shade = extractText(schemeClrNode, ["a:shade", "attrs", "val"]);
         if (shade !== undefined) {
           shade = parseInt(shade) / 100000;
           let color = new colz.Color("#" + borderColor);
@@ -246,7 +246,7 @@ export default class ShapeTextProcessor extends NodeProcessor {
     }
 
     // Border type
-    let _borderType = extractTextByPath(lineNode, ["a:prstDash", "attrs", "val"]);
+    let _borderType = extractText(lineNode, ["a:prstDash", "attrs", "val"]);
     let borderType: string
     let strokeDasharray = "0";
     switch (_borderType) {
