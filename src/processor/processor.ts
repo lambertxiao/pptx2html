@@ -23,6 +23,7 @@ export default abstract class NodeProcessor {
     return this.slide.gprops!.theme!.getSchemeColor(clr)
   }
 
+  // 寻找一个元素的位置，元素可能在slide本身，也可能在layout里，也可能在母版里
   getPosition(slideSpNode: any, slideLayoutSpNode: any, slideMasterSpNode: any) {
     let off = undefined;
     let x = -1, y = -1;
