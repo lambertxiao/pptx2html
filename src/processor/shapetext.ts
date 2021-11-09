@@ -263,8 +263,6 @@ export default class ShapeTextProcessor extends NodeProcessor {
       borderColor = "#" + borderColor;
     }
 
-    console.log(this.name, borderColor)
-
     // Border type
     let _borderType = extractText(lineNode, ["a:prstDash", "attrs", "val"]);
     let borderType: string

@@ -136,7 +136,6 @@ export class HtmlDrawer implements Drawer {
   }
 
   drawShapeNode(node: ShapeNode): string {
-    printObj(node)
     let styles = this.getNodeBasicStyle(node)
     let fillColor = node.bgColor ? node.bgColor : "none"
     let borderColor = node.border?.color ? node.border?.color : "none"
