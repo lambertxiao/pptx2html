@@ -10,7 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "cd dst && node main.js",
-    "build-run": "tsc && cd dst && node main.js"
+    "build-run": "tsc && cd dst && node main.js",
+    "tsc": "tsc"
   },
   "author": "",
   "license": "ISC",
@@ -19,5 +20,8 @@
     "colz": "^0.1.0",
     "commander": "^8.3.0",
     "jszip": "^3.7.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.4.4"
   }
 }
